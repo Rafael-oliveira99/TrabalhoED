@@ -2,6 +2,7 @@ package Game;
 
 import java.util.Scanner;
 import java.io.File;
+import Collections.ListasIterador.Classes.LinkedUnorderedList;
 
 public class Main {
     public static void main(String[] args) {
@@ -18,7 +19,8 @@ public class Main {
             String op = s.next();
             s.nextLine(); // consume newline
 
-            if (op.equals("0")) break;
+            if (op.equals("0"))
+                break;
 
             if (op.equals("3")) {
                 MapEditor editor = new MapEditor();
@@ -54,14 +56,51 @@ public class Main {
             game.enableGUI();
         }
 
-        // Ask for start room name
-        System.out.print("Enter Start Room Name (default: Entrada): ");
-        String startName = s.nextLine().trim();
-        if (startName.isEmpty()) startName = "Entrada";
+        // Find all ENTRANCE rooms
+        LinkedUnorderedList<Room> entrances = new LinkedUnorderedList<>();
+        java.util.Iterator<Room> it = game.getMap().getRooms();
+        while (it.hasNext()) {
+            Room r = it.next();
+            if (r.getType().equals("ENTRANCE")) {
+                entrances.addToRear(r);
+            }
+        }
 
-        // FIX IS HERE: Added "0, 0" coordinates to satisfy the new Room constructor.
-        // This is a temporary object; GameEngine will link it to the real map room.
-        Room startRoom = new Room(startName, "ENTRANCE", "none", 0, 0);
+        Room startRoom = null;
+
+        if (entrances.isEmpty()) {
+            System.out.println("Error: No ENTRANCE rooms found in map! Defaulting to first room.");
+            startRoom = game.getMap().getRooms().next();
+        } else if (entrances.size() == 1) {
+            startRoom = entrances.first();
+            System.out.println("Only one entrance found: " + startRoom.getId());
+        } else {
+            // Multiple entrances, ask user to choose
+            System.out.println("\nSelect a starting entrance:");
+            Object[] entArray = new Object[entrances.size()];
+            int idx = 0;
+            for (Room r : entrances)
+                entArray[idx++] = r;
+
+            for (int i = 0; i < entArray.length; i++) {
+                System.out.println((i + 1) + ". " + ((Room) entArray[i]).getId());
+            }
+
+            int choice = -1;
+            while (true) {
+                System.out.print("Choice: ");
+                try {
+                    String input = s.nextLine().trim();
+                    choice = Integer.parseInt(input);
+                    if (choice >= 1 && choice <= entArray.length) {
+                        startRoom = (Room) entArray[choice - 1];
+                        break;
+                    }
+                } catch (NumberFormatException e) {
+                }
+                System.out.println("Invalid choice. Please enter a number between 1 and " + entArray.length);
+            }
+        }
 
         game.addPlayer("Player 1", false, startRoom);
         game.addPlayer("Bot Alpha", true, startRoom);

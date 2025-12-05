@@ -16,7 +16,7 @@ import java.awt.event.WindowEvent;
  * Manages the core game logic, including the game loop, turn management,
  * player movement, and rule enforcement for "Labirinto da Glória".
  *
- * @author YourGroup
+ * @author Rafael Oliveira
  * @version 1.3
  */
 public class GameEngine {
@@ -37,6 +37,10 @@ public class GameEngine {
         this.allPlayers = new LinkedUnorderedList<>();
         this.gameRunning = true;
         this.consoleScanner = new Scanner(System.in);
+    }
+
+    public MazeMap getMap() {
+        return map;
     }
 
     public void enableGUI() {
@@ -89,7 +93,29 @@ public class GameEngine {
                 }
             }
         }
-        this.availableEnigmas = DataLoader.loadEnigmas("src/Map/enigmas.json");
+        // Try to find enigmas.json in common locations
+        String[] possiblePaths = {
+                "src/Map/enigmas.json",
+                "Map/enigmas.json",
+                "enigmas.json",
+                "ED/src/Map/enigmas.json", // If running from parent dir
+                "../src/Map/enigmas.json" // If running from bin/out
+        };
+        String enigmaPath = null;
+
+        for (String path : possiblePaths) {
+            if (new java.io.File(path).exists()) {
+                enigmaPath = path;
+                break;
+            }
+        }
+
+        if (enigmaPath != null) {
+            this.availableEnigmas = DataLoader.loadEnigmas(enigmaPath);
+        } else {
+            System.out.println("Warning: enigmas.json not found. Enigmas will be disabled.");
+            this.availableEnigmas = new ArrayUnorderedList<>();
+        }
     }
 
     public void addPlayer(String name, boolean isBot, Room startRoom) {
@@ -118,11 +144,15 @@ public class GameEngine {
                 current.addToLog("Skipped turn due to stun.");
                 current.setSkipTurns(current.getSkipTurns() - 1);
                 turnQueue.enqueue(current);
-                try { Thread.sleep(1500); } catch (Exception e) {}
+                try {
+                    Thread.sleep(1500);
+                } catch (Exception e) {
+                }
                 continue;
             }
 
-            if (!gameRunning) break;
+            if (!gameRunning)
+                break;
 
             printMsg("\n>> Turn: " + current.getName() + " (" + (current.isBot() ? "Bot" : "Human") + ")");
             printMsg("Current Location: " + current.getCurrentRoom());
@@ -138,7 +168,8 @@ public class GameEngine {
                 printMsg("!!! WE HAVE A WINNER: " + current.getName() + " !!!");
                 current.addToLog("Found the treasure and won!");
                 gameRunning = false;
-                if(gui != null) JOptionPane.showMessageDialog(gui, "Winner: " + current.getName());
+                if (gui != null)
+                    JOptionPane.showMessageDialog(gui, "Winner: " + current.getName());
             } else {
                 turnQueue.enqueue(current);
             }
@@ -149,7 +180,10 @@ public class GameEngine {
 
     private void playBotTurn(Player bot) {
         Iterator<Room> path = map.getShortestPath(bot.getCurrentRoom(), treasureRoom);
-        try { Thread.sleep(1000); } catch (Exception e) {}
+        try {
+            Thread.sleep(1000);
+        } catch (Exception e) {
+        }
 
         if (path.hasNext()) {
             path.next();
@@ -207,10 +241,12 @@ public class GameEngine {
             targetName = JOptionPane.showInputDialog(gui, "Type room name to move:");
         } else {
             System.out.println("Type room name to move:");
-            if (consoleScanner.hasNextLine()) targetName = consoleScanner.nextLine();
+            if (consoleScanner.hasNextLine())
+                targetName = consoleScanner.nextLine();
         }
 
-        if (targetName == null || targetName.trim().isEmpty()) return;
+        if (targetName == null || targetName.trim().isEmpty())
+            return;
 
         Room target = map.getRoom(targetName);
 
@@ -242,7 +278,8 @@ public class GameEngine {
         if (availableEnigmas == null || availableEnigmas.isEmpty()) {
             this.availableEnigmas = DataLoader.loadEnigmas("src/Map/enigmas.json");
         }
-        if (availableEnigmas.isEmpty()) return;
+        if (availableEnigmas.isEmpty())
+            return;
 
         // FIX 2: Random Enigma Logic
         int randomIndex = (int) (Math.random() * availableEnigmas.size());
@@ -263,7 +300,8 @@ public class GameEngine {
             input = JOptionPane.showInputDialog(gui, "Answer the Enigma:\n" + e.getQuestion());
         } else {
             System.out.print("Answer: ");
-            if (consoleScanner.hasNext()) input = consoleScanner.next();
+            if (consoleScanner.hasNext())
+                input = consoleScanner.next();
             consoleScanner.nextLine(); // consume newline
         }
 
@@ -282,7 +320,7 @@ public class GameEngine {
 
         Iterator<Room> neighbors = map.getNeighbors(p.getCurrentRoom());
         boolean unlockedAny = false;
-        while(neighbors.hasNext()) {
+        while (neighbors.hasNext()) {
             Room r = neighbors.next();
             if (map.getWeight(p.getCurrentRoom(), r) > 100) {
                 map.openPassage(p.getCurrentRoom(), r);
@@ -290,7 +328,8 @@ public class GameEngine {
             }
         }
 
-        if(unlockedAny) printMsg("*CLICK* A nearby door unlocks!");
+        if (unlockedAny)
+            printMsg("*CLICK* A nearby door unlocks!");
 
         // Explicitly unlock treasure if adjacent
         Room treasure = map.getRoom("Tesouro");
@@ -310,13 +349,11 @@ public class GameEngine {
                 movePlayerWithAnimation(p, prev);
                 printMsg("You were moved back to " + prev.getId());
             }
-        }
-        else if (chance < 20) {
+        } else if (chance < 20) {
             printMsg("!!! EVENT: You fell into a trap! You are stunned for 1 turn. !!!");
             p.addToLog("Event: Stunned by trap.");
             p.setSkipTurns(1);
-        }
-        else if (chance < 30) {
+        } else if (chance < 30) {
             if (allPlayers.size() > 1) {
                 printMsg("!!! EVENT: TELEPORT SPELL! Swapping positions... !!!");
                 p.addToLog("Event: Swapped positions.");
@@ -324,7 +361,10 @@ public class GameEngine {
                 Iterator<Player> it = allPlayers.iterator();
                 while (it.hasNext()) {
                     Player other = it.next();
-                    if (!other.equals(p)) { target = other; break; }
+                    if (!other.equals(p)) {
+                        target = other;
+                        break;
+                    }
                 }
                 if (target != null) {
                     Room myRoom = p.getCurrentRoom();
@@ -334,12 +374,13 @@ public class GameEngine {
                     printMsg("Swapped positions with " + target.getName());
                 }
             }
-        }
-        else if (chance < 40) {
+        } else if (chance < 40) {
             printMsg("!!! EVENT: Adrenaline Rush! You get an extra turn! !!!");
             p.addToLog("Event: Gained extra turn.");
-            if (p.isBot()) playBotTurn(p);
-            else playHumanTurn(p);
+            if (p.isBot())
+                playBotTurn(p);
+            else
+                playHumanTurn(p);
         }
     }
 
@@ -353,14 +394,16 @@ public class GameEngine {
             file.write("[\n");
             boolean firstPlayer = true;
             for (Player p : allPlayers) {
-                if (!firstPlayer) file.write(",\n");
+                if (!firstPlayer)
+                    file.write(",\n");
                 file.write("  {\n");
                 file.write("    \"name\": \"" + p.getName() + "\",\n");
                 file.write("    \"log\": [\n");
                 Iterator<String> logs = p.getHistoryLog().iterator();
                 while (logs.hasNext()) {
                     file.write("      \"" + logs.next() + "\"");
-                    if (logs.hasNext()) file.write(",");
+                    if (logs.hasNext())
+                        file.write(",");
                     file.write("\n");
                 }
                 file.write("    ]\n");

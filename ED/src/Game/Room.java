@@ -22,16 +22,46 @@ public class Room implements Comparable<Room> {
         this.hasLever = false;
     }
 
-    public String getId() { return id; }
-    public String getType() { return type; }
-    public String getInteraction() { return interaction; }
-    public void setInteraction(String interaction) { this.interaction = interaction; }
-    public boolean hasLever() { return hasLever; }
-    public void setHasLever(boolean hasLever) { this.hasLever = hasLever; }
+    public String getId() {
+        return id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getInteraction() {
+        return interaction;
+    }
+
+    public void setInteraction(String interaction) {
+        this.interaction = interaction;
+    }
+
+    public boolean hasLever() {
+        return hasLever;
+    }
+
+    public void setHasLever(boolean hasLever) {
+        this.hasLever = hasLever;
+    }
 
     // Getters for coords
-    public int getX() { return x; }
-    public int getY() { return y; }
+    public int getX() {
+        return x;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setY(int y) {
+        this.y = y;
+    }
 
     @Override
     public String toString() {
@@ -40,8 +70,10 @@ public class Room implements Comparable<Room> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         Room room = (Room) o;
         return Objects.equals(id, room.id);
     }

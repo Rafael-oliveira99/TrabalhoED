@@ -8,7 +8,8 @@ import java.util.Iterator;
  * Represents the game map using a bidirectional network graph.
  * <p>
  * This class manages the rooms (vertices) and corridors (edges) of the maze.
- * It uses a custom implementation of a Network ADT to handle weighted connections,
+ * It uses a custom implementation of a Network ADT to handle weighted
+ * connections,
  * allowing for locked doors (high weight) and open passages (low weight).
  * </p>
  *
@@ -46,7 +47,8 @@ public class MazeMap {
      *
      * @param from   The starting room.
      * @param to     The destination room.
-     * @param weight The cost of traversing this edge (e.g., 1.0 for open, 1000.0 for locked).
+     * @param weight The cost of traversing this edge (e.g., 1.0 for open, 1000.0
+     *               for locked).
      */
     public void addCorridor(Room from, Room to, double weight) {
         graph.addEdge(from, to, weight);
@@ -105,7 +107,7 @@ public class MazeMap {
         Iterator<Room> it = roomList.iterator();
         while (it.hasNext()) {
             Room r = it.next();
-            if (r.getId().equals(id)) {
+            if (r.getId().equalsIgnoreCase(id)) {
                 return r;
             }
         }
@@ -120,7 +122,8 @@ public class MazeMap {
      * @return true if they are adjacent in the graph, false otherwise.
      */
     public boolean isNeighbor(Room a, Room b) {
-        if (a == null || b == null || a.equals(b)) return false;
+        if (a == null || b == null || a.equals(b))
+            return false;
 
         // We use the shortest path iterator.
         // If they are neighbors, the path should have exactly 2 nodes: [Start, End]
@@ -148,7 +151,8 @@ public class MazeMap {
 
         while (allRooms.hasNext()) {
             Room r = allRooms.next();
-            if (r.equals(current)) continue;
+            if (r.equals(current))
+                continue;
 
             // Check if connected
             if (isNeighbor(current, r)) {

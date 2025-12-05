@@ -12,7 +12,12 @@ public class MapEditor {
     private class TempConnection {
         String from, to;
         int cost;
-        public TempConnection(String f, String t, int c) { from=f; to=t; cost=c; }
+
+        public TempConnection(String f, String t, int c) {
+            from = f;
+            to = t;
+            cost = c;
+        }
     }
 
     private ArrayUnorderedList<Room> rooms;
@@ -30,7 +35,7 @@ public class MapEditor {
     public void start() {
         System.out.println("\n=== MAP EDITOR ===");
         boolean running = true;
-        while(running) {
+        while (running) {
             System.out.println("1. Add Room (Manual)");
             System.out.println("2. Add Connection (Manual)");
             System.out.println("3. Generate Random Map (Versatile)");
@@ -39,12 +44,22 @@ public class MapEditor {
             String op = scanner.next();
             scanner.nextLine(); // consume newline
 
-            switch(op) {
-                case "1": addRoom(); break;
-                case "2": addConnection(); break;
-                case "3": generateRandomMap(); break;
-                case "4": saveMap(); running = false; break;
-                default: System.out.println("Invalid.");
+            switch (op) {
+                case "1":
+                    addRoom();
+                    break;
+                case "2":
+                    addConnection();
+                    break;
+                case "3":
+                    generateRandomMap();
+                    break;
+                case "4":
+                    saveMap();
+                    running = false;
+                    break;
+                default:
+                    System.out.println("Invalid.");
             }
         }
     }
@@ -86,8 +101,10 @@ public class MapEditor {
         System.out.print("How many rooms? (min 5, max 30): ");
         int count = scanner.nextInt();
         scanner.nextLine();
-        if (count < 5) count = 5;
-        if (count > 30) count = 30;
+        if (count < 5)
+            count = 5;
+        if (count > 30)
+            count = 30;
 
         // Reset lists
         rooms = new ArrayUnorderedList<>();
@@ -95,14 +112,15 @@ public class MapEditor {
 
         // Temporary array for logic (Allowed as it is standard Java, not a Collection)
         Room[] tempRooms = new Room[count];
-        String[] interactions = {"none", "none", "enigma", "lever", "none", "enigma"};
+        String[] interactions = { "none", "none", "enigma", "lever", "none", "enigma" };
 
         // 1. Create Start Room (Center-ish)
         tempRooms[0] = new Room("Entrada", "ENTRANCE", "none", 400, 400);
         rooms.addToRear(tempRooms[0]);
 
         // 2. Generate Rooms & Backbone Tree (Branching)
-        // Instead of a straight line (i connects to i-1), connect i to a RANDOM previous room.
+        // Instead of a straight line (i connects to i-1), connect i to a RANDOM
+        // previous room.
         for (int i = 1; i < count; i++) {
             // Determine Type
             String type = "NORMAL";
@@ -116,7 +134,8 @@ public class MapEditor {
             }
 
             String interact = interactions[rand.nextInt(interactions.length)];
-            if (type.equals("TREASURE") || type.equals("ENTRANCE")) interact = "none";
+            if (type.equals("TREASURE") || type.equals("ENTRANCE"))
+                interact = "none";
 
             // Pick a random parent from existing rooms to attach to
             int parentIndex = rand.nextInt(i);
@@ -126,12 +145,18 @@ public class MapEditor {
             // Distance roughly 100-150 pixels
             double angle = rand.nextDouble() * 2 * Math.PI;
             int dist = 100 + rand.nextInt(50);
-            int newX = parent.getX() + (int)(Math.cos(angle) * dist);
-            int newY = parent.getY() + (int)(Math.sin(angle) * dist);
+            int newX = parent.getX() + (int) (Math.cos(angle) * dist);
+            int newY = parent.getY() + (int) (Math.sin(angle) * dist);
 
             // Boundary checks
-            if (newX < 50) newX = 50; if (newX > 950) newX = 950;
-            if (newY < 50) newY = 50; if (newY > 750) newY = 750;
+            if (newX < 50)
+                newX = 50;
+            if (newX > 950)
+                newX = 950;
+            if (newY < 50)
+                newY = 50;
+            if (newY > 750)
+                newY = 750;
 
             Room newRoom = new Room(name, type, interact, newX, newY);
             tempRooms[i] = newRoom;
@@ -144,7 +169,8 @@ public class MapEditor {
         System.out.println("Backbone generated. Adding complexity...");
 
         // 3. Add Extra Edges (Cycles) & Locks
-        // Randomly connect some rooms to create loops, making it a maze graph, not just a tree.
+        // Randomly connect some rooms to create loops, making it a maze graph, not just
+        // a tree.
         int extraEdges = count / 3;
         for (int k = 0; k < extraEdges; k++) {
             int i1 = rand.nextInt(count);
@@ -164,7 +190,8 @@ public class MapEditor {
         // Simplified: Just rely on the extra edges for locks or add logic here.
         // Let's ensure at least one Lever exists if there are locks.
         // (Already handled by random interaction assignment, but strictly speaking,
-        // a robust generator ensures solvability. This random version assumes statistical solvability).
+        // a robust generator ensures solvability. This random version assumes
+        // statistical solvability).
 
         System.out.println("Map generated successfully!");
         System.out.println("Rooms: " + count);
@@ -174,27 +201,33 @@ public class MapEditor {
     private void saveMap() {
         System.out.print("Enter filename to save (e.g., random.json): ");
         String filename = scanner.nextLine();
-        if (!filename.endsWith(".json")) filename += ".json";
+        if (!filename.endsWith(".json"))
+            filename += ".json";
 
         try (FileWriter fw = new FileWriter(filename)) {
             fw.write("{\n  \"rooms\": [\n");
             Iterator<Room> itRooms = rooms.iterator();
-            while(itRooms.hasNext()) {
+            while (itRooms.hasNext()) {
                 Room r = itRooms.next();
-                fw.write("    { \"room\": \"" + r.getId() + "\", \"type\": \"" + r.getType() + "\", \"interaction\": \"" + r.getInteraction() + "\", \"x\": " + r.getX() + ", \"y\": " + r.getY() + " }");
-                if (itRooms.hasNext()) fw.write(",");
+                fw.write("    { \"room\": \"" + r.getId() + "\", \"type\": \"" + r.getType() + "\", \"interaction\": \""
+                        + r.getInteraction() + "\", \"x\": " + r.getX() + ", \"y\": " + r.getY() + " }");
+                if (itRooms.hasNext())
+                    fw.write(",");
                 fw.write("\n");
             }
             fw.write("  ],\n  \"connections\": [\n");
             Iterator<TempConnection> itConns = connections.iterator();
-            while(itConns.hasNext()) {
+            while (itConns.hasNext()) {
                 TempConnection c = itConns.next();
                 fw.write("    { \"from\": \"" + c.from + "\", \"to\": \"" + c.to + "\", \"cost\": " + c.cost + " }");
-                if (itConns.hasNext()) fw.write(",");
+                if (itConns.hasNext())
+                    fw.write(",");
                 fw.write("\n");
             }
             fw.write("  ]\n}");
             System.out.println("Saved to " + filename);
-        } catch (IOException e) { e.printStackTrace(); }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

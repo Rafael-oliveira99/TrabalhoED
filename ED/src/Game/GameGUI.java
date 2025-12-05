@@ -3,14 +3,18 @@ package Game;
 import Collections.ListasIterador.Classes.LinkedUnorderedList;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.geom.Point2D;
 import java.util.Iterator;
 
 /**
  * The Graphical User Interface for the game "Labirinto da Glória".
  * <p>
- * This class is responsible for rendering the game state visually using Java Swing.
- * It draws the maze structure (rooms and corridors), player positions, and animations
- * without relying on external graph libraries, strictly adhering to the project constraints.
+ * This class is responsible for rendering the game state visually using Java
+ * Swing.
+ * It draws the maze structure (rooms and corridors), player positions, and
+ * animations
+ * without relying on external graph libraries, strictly adhering to the project
+ * constraints.
  * </p>
  *
  * @author YourGroup
@@ -82,7 +86,84 @@ public class GameGUI extends JFrame {
         });
         animationTimer.start();
 
+        // Auto-fix overlapping rooms
+        optimizeLayout();
+
         setVisible(true);
+    }
+
+    /**
+     * Applies a simple force-directed layout step to spread out overlapping rooms.
+     */
+    private void optimizeLayout() {
+        int iterations = 100;
+        int minDistance = 80;
+        int width = 1100; // slightly less than window width
+        int height = 700; // slightly less than window height
+
+        // Using custom collection to comply with requirements
+        LinkedUnorderedList<Room> roomList = new LinkedUnorderedList<>();
+        Iterator<Room> it = map.getRooms();
+        while (it.hasNext())
+            roomList.addToRear(it.next());
+
+        for (int k = 0; k < iterations; k++) {
+            // Convert to array for O(1) access during O(N^2) loop
+            Object[] rooms = new Object[roomList.size()];
+            int idx = 0;
+            for (Room r : roomList)
+                rooms[idx++] = r;
+
+            for (int i = 0; i < rooms.length; i++) {
+                Room r1 = (Room) rooms[i];
+
+                // FIX: Force Treasure room to center
+                if (r1.getType().equals("TREASURE") || r1.getId().equalsIgnoreCase("Tesouro")) {
+                    r1.setX(width / 2);
+                    r1.setY(height / 2);
+                    continue; // Do not move it with forces
+                }
+
+                for (int j = i + 1; j < rooms.length; j++) {
+                    Room r2 = (Room) rooms[j];
+
+                    double dx = r1.getX() - r2.getX();
+                    double dy = r1.getY() - r2.getY();
+                    double dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < minDistance) {
+                        if (dist < 0.1) {
+                            dx = Math.random() - 0.5;
+                            dy = Math.random() - 0.5;
+                            dist = 1;
+                        }
+
+                        double force = (minDistance - dist) / 2.0;
+                        double fx = (dx / dist) * force;
+                        double fy = (dy / dist) * force;
+
+                        r1.setX((int) (r1.getX() + fx));
+                        r1.setY((int) (r1.getY() + fy));
+
+                        // Only move r2 if it's not the treasure
+                        if (!r2.getType().equals("TREASURE") && !r2.getId().equalsIgnoreCase("Tesouro")) {
+                            r2.setX((int) (r2.getX() - fx));
+                            r2.setY((int) (r2.getY() - fy));
+                        }
+                    }
+                }
+
+                // Keep in bounds
+                if (r1.getX() < 50)
+                    r1.setX(50);
+                if (r1.getX() > width)
+                    r1.setX(width);
+                if (r1.getY() < 50)
+                    r1.setY(50);
+                if (r1.getY() > height)
+                    r1.setY(height);
+            }
+        }
     }
 
     /**
@@ -122,132 +203,215 @@ public class GameGUI extends JFrame {
      */
     private class GamePanel extends JPanel {
         public GamePanel() {
-            setBackground(new Color(40, 40, 50)); // Dark Gray background
+            // Dark background, but we will paint over it with a gradient
+            setBackground(new Color(20, 20, 25));
         }
 
         @Override
         protected void paintComponent(Graphics g) {
             super.paintComponent(g);
             Graphics2D g2 = (Graphics2D) g;
+
+            // Enable high-quality rendering
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+            g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+
+            int w = getWidth();
+            int h = getHeight();
+
+            // --- LAYER 0: BACKGROUND (Vignette) ---
+            // Center is slightly lighter, corners are very dark
+            Point2D center = new Point2D.Float(w / 2.0f, h / 2.0f);
+            float radius = Math.max(w, h);
+            float[] dist = { 0.0f, 1.0f };
+            Color[] colors = { new Color(45, 45, 55), new Color(10, 10, 15) };
+            RadialGradientPaint bgPaint = new RadialGradientPaint(center, radius, dist, colors);
+            g2.setPaint(bgPaint);
+            g2.fillRect(0, 0, w, h);
 
             // Safety check: Ensure map has rooms
-            if (!map.getRooms().hasNext()) return;
+            if (!map.getRooms().hasNext())
+                return;
 
-            // --- LAYER 1: CORRIDORS (Lines) ---
-            // We draw lines first so they appear behind the room circles.
+            // --- LAYER 1: CORRIDORS (Lines with Glow) ---
             g2.setStroke(new BasicStroke(3));
 
             Iterator<Room> itFrom = map.getRooms();
-            while(itFrom.hasNext()) {
+            while (itFrom.hasNext()) {
                 Room r1 = itFrom.next();
-
-                // Check connections to all other rooms (Inefficient but safe for N < 100)
-                // We use a fresh iterator to check pairs
                 Iterator<Room> itTo = map.getRooms();
-                while(itTo.hasNext()) {
+                while (itTo.hasNext()) {
                     Room r2 = itTo.next();
 
-                    // Only draw if they are neighbors (connected edge)
                     if (map.isNeighbor(r1, r2)) {
                         double weight = map.getWeight(r1, r2);
 
-                        // Color coding for paths
+                        // Draw Shadow/Glow first
                         if (weight > 100) {
-                            g2.setColor(new Color(150, 50, 50)); // Red = Locked
-                        } else {
-                            g2.setColor(new Color(100, 100, 120)); // Gray = Open
-                        }
+                            // Locked: Red Glow
+                            g2.setColor(new Color(255, 0, 0, 50));
+                            g2.setStroke(new BasicStroke(6));
+                            g2.drawLine(r1.getX(), r1.getY(), r2.getX(), r2.getY());
 
-                        // Draw line between coordinates
+                            // Core Line
+                            g2.setColor(new Color(200, 50, 50));
+                            g2.setStroke(new BasicStroke(2));
+                        } else {
+                            // Open: Subtle Blue/Gray
+                            g2.setColor(new Color(100, 120, 140, 100));
+                            g2.setStroke(new BasicStroke(2));
+                        }
                         g2.drawLine(r1.getX(), r1.getY(), r2.getX(), r2.getY());
                     }
                 }
             }
 
-            // --- LAYER 2: ROOMS (Circles) ---
+            // --- LAYER 2: ROOMS (Spheres) ---
             Iterator<Room> itDraw = map.getRooms();
-            while(itDraw.hasNext()) {
+            while (itDraw.hasNext()) {
                 Room r = itDraw.next();
-                int x = r.getX();
-                int y = r.getY();
-                int size = 50;
-
-                // Room Styling based on Type
-                if (r.getType().equals("TREASURE")) g2.setColor(new Color(255, 215, 0)); // Gold
-                else if (r.getType().equals("ENTRANCE")) g2.setColor(new Color(50, 205, 50)); // Green
-                else g2.setColor(new Color(70, 130, 180)); // Blue
-
-                // Draw filled circle centered at X,Y
-                g2.fillOval(x - size/2, y - size/2, size, size);
-
-                // Draw border
-                g2.setColor(Color.WHITE);
-                g2.setStroke(new BasicStroke(2));
-                g2.drawOval(x - size/2, y - size/2, size, size);
-
-                // Draw Label (Room ID)
-                g2.setFont(new Font("Arial", Font.BOLD, 12));
-                g2.drawString(r.getId(), x - 20, y - 30);
-
-                // Draw Badges for Interactions
-                if (r.getInteraction().equals("lever")) {
-                    g2.setColor(Color.ORANGE);
-                    g2.fillOval(x - 20, y + 20, 15, 15);
-                    g2.setColor(Color.BLACK);
-                    g2.drawString("!", x - 16, y + 32);
-                } else if (r.getInteraction().equals("enigma")) {
-                    g2.setColor(Color.MAGENTA);
-                    g2.fillOval(x + 5, y + 20, 15, 15);
-                    g2.setColor(Color.BLACK);
-                    g2.drawString("?", x + 9, y + 32);
-                }
+                drawRoom(g2, r);
             }
 
             // --- LAYER 3: PLAYERS ---
             Iterator<Player> playerIt = players.iterator();
-            while(playerIt.hasNext()) {
+            while (playerIt.hasNext()) {
                 Player p = playerIt.next();
-                int px = 0, py = 0;
+                drawPlayer(g2, p);
+            }
+        }
 
-                // Check if this specific player is currently animating
-                if (p == animatingPlayer && animStartRoom != null && animEndRoom != null) {
-                    // INTERPOLATION LOGIC
-                    int sx = animStartRoom.getX();
-                    int sy = animStartRoom.getY();
-                    int ex = animEndRoom.getX();
-                    int ey = animEndRoom.getY();
+        private void drawRoom(Graphics2D g2, Room r) {
+            int x = r.getX();
+            int y = r.getY();
+            int size = 50;
+            int shadowOffset = 5;
 
-                    // Calculate intermediate point based on progress (0.0 to 1.0)
-                    px = (int) (sx + (ex - sx) * animProgress);
-                    py = (int) (sy + (ey - sy) * animProgress);
-                } else {
-                    // Static position
-                    if (p.getCurrentRoom() != null) {
-                        px = p.getCurrentRoom().getX();
-                        py = p.getCurrentRoom().getY();
-                    }
+            // 1. Drop Shadow
+            g2.setColor(new Color(0, 0, 0, 100));
+            g2.fillOval(x - size / 2 + shadowOffset, y - size / 2 + shadowOffset, size, size);
+
+            // 2. Sphere Gradient
+            Color baseColor;
+            Color highlightColor;
+
+            if (r.getType().equals("TREASURE")) {
+                baseColor = new Color(218, 165, 32); // Goldenrod
+                highlightColor = new Color(255, 255, 224); // Light Yellow
+            } else if (r.getType().equals("ENTRANCE")) {
+                baseColor = new Color(34, 139, 34); // Forest Green
+                highlightColor = new Color(144, 238, 144); // Light Green
+            } else {
+                baseColor = new Color(70, 130, 180); // Steel Blue
+                highlightColor = new Color(176, 224, 230); // Powder Blue
+            }
+
+            // Gradient focused slightly top-left for 3D effect
+            Point2D center = new Point2D.Float(x - size / 6.0f, y - size / 6.0f);
+            float radius = size / 1.8f;
+            float[] dist = { 0.0f, 1.0f };
+            Color[] colors = { highlightColor, baseColor };
+            RadialGradientPaint spherePaint = new RadialGradientPaint(center, radius, dist, colors);
+
+            g2.setPaint(spherePaint);
+            g2.fillOval(x - size / 2, y - size / 2, size, size);
+
+            // 3. Border (Subtle)
+            g2.setColor(new Color(255, 255, 255, 150));
+            g2.setStroke(new BasicStroke(1.5f));
+            g2.drawOval(x - size / 2, y - size / 2, size, size);
+
+            // 4. Label Background (Rounded Rect)
+            String label = r.getId();
+            g2.setFont(new Font("SansSerif", Font.BOLD, 12));
+            FontMetrics fm = g2.getFontMetrics();
+            int textW = fm.stringWidth(label);
+            int textH = fm.getHeight();
+
+            int labelX = x - textW / 2;
+            int labelY = y - size / 2 - 10;
+
+            g2.setColor(new Color(0, 0, 0, 180));
+            g2.fillRoundRect(labelX - 5, labelY - textH + 3, textW + 10, textH, 10, 10);
+
+            g2.setColor(Color.WHITE);
+            g2.drawString(label, labelX, labelY);
+
+            // 5. Badges
+            if (!r.getInteraction().equals("none")) {
+                int badgeSize = 18;
+                int badgeX = x + size / 2 - 10;
+                int badgeY = y - size / 2 - 5;
+
+                if (r.getInteraction().equals("lever")) {
+                    g2.setColor(new Color(255, 140, 0)); // Dark Orange
+                    g2.fillOval(badgeX, badgeY, badgeSize, badgeSize);
+                    g2.setColor(Color.WHITE);
+                    g2.setFont(new Font("SansSerif", Font.BOLD, 14));
+                    g2.drawString("!", badgeX + 6, badgeY + 14);
+                } else if (r.getInteraction().equals("enigma")) {
+                    g2.setColor(new Color(148, 0, 211)); // Violet
+                    g2.fillOval(badgeX, badgeY, badgeSize, badgeSize);
+                    g2.setColor(Color.WHITE);
+                    g2.setFont(new Font("SansSerif", Font.BOLD, 14));
+                    g2.drawString("?", badgeX + 5, badgeY + 14);
                 }
+            }
+        }
 
-                // Draw Player Token
-                g2.setColor(p.getColor());
-                g2.fillOval(px - 15, py - 15, 30, 30);
+        private void drawPlayer(Graphics2D g2, Player p) {
+            int px = 0, py = 0;
 
-                // Player Border
-                g2.setColor(Color.WHITE);
-                g2.setStroke(new BasicStroke(2));
-                g2.drawOval(px - 15, py - 15, 30, 30);
-
-                // Player Name
-                g2.setColor(Color.WHITE);
-                g2.drawString(p.getName(), px - 20, py + 45);
-
-                // Visual Status Effects
-                if(p.getSkipTurns() > 0) {
-                    g2.setColor(Color.RED);
-                    g2.setFont(new Font("Arial", Font.BOLD, 20));
-                    g2.drawString("ZZZ", px, py - 20); // Sleeping indicator
+            // Interpolation Logic
+            if (p == animatingPlayer && animStartRoom != null && animEndRoom != null) {
+                int sx = animStartRoom.getX();
+                int sy = animStartRoom.getY();
+                int ex = animEndRoom.getX();
+                int ey = animEndRoom.getY();
+                px = (int) (sx + (ex - sx) * animProgress);
+                py = (int) (sy + (ey - sy) * animProgress);
+            } else {
+                if (p.getCurrentRoom() != null) {
+                    px = p.getCurrentRoom().getX();
+                    py = p.getCurrentRoom().getY();
                 }
+            }
+
+            // Draw Player as a smaller sphere
+            int size = 26;
+
+            // Shadow
+            g2.setColor(new Color(0, 0, 0, 80));
+            g2.fillOval(px - size / 2 + 3, py - size / 2 + 3, size, size);
+
+            // Sphere
+            Point2D center = new Point2D.Float(px - size / 6.0f, py - size / 6.0f);
+            float radius = size / 1.8f;
+            float[] dist = { 0.0f, 1.0f };
+            Color base = p.getColor();
+            Color highlight = Color.WHITE;
+            Color[] colors = { highlight, base };
+            RadialGradientPaint pPaint = new RadialGradientPaint(center, radius, dist, colors);
+
+            g2.setPaint(pPaint);
+            g2.fillOval(px - size / 2, py - size / 2, size, size);
+
+            // Border
+            g2.setColor(Color.WHITE);
+            g2.setStroke(new BasicStroke(1));
+            g2.drawOval(px - size / 2, py - size / 2, size, size);
+
+            // Name Label
+            g2.setColor(Color.WHITE);
+            g2.setFont(new Font("SansSerif", Font.PLAIN, 11));
+            g2.drawString(p.getName(), px - 15, py + 25);
+
+            // Status Effects
+            if (p.getSkipTurns() > 0) {
+                g2.setColor(new Color(255, 100, 100));
+                g2.setFont(new Font("SansSerif", Font.BOLD, 16));
+                g2.drawString("Zzz", px + 10, py - 10);
             }
         }
     }
