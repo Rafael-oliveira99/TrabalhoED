@@ -7,17 +7,16 @@ import java.awt.geom.Point2D;
 import java.util.Iterator;
 
 /**
- * The Graphical User Interface for the game "Labirinto da Glória".
+ * Interface Gráfica do Utilizador para o jogo "Labirinto da Glória".
  * <p>
- * This class is responsible for rendering the game state visually using Java
- * Swing.
- * It draws the maze structure (rooms and corridors), player positions, and
- * animations
- * without relying on external graph libraries, strictly adhering to the project
- * constraints.
+ * Esta classe é responsável por renderizar o estado do jogo visualmente usando
+ * Java Swing.
+ * Desenha a estrutura do labirinto (salas e corredores), posições dos
+ * jogadores, e animações
+ * sem depender de bibliotecas gráficas externas.
  * </p>
  *
- * @author YourGroup
+ * @author OTeuGrupo
  * @version 1.0
  */
 public class GameGUI extends JFrame {
@@ -51,7 +50,7 @@ public class GameGUI extends JFrame {
         this.map = map;
         this.players = players;
 
-        setTitle("Labirinto da Glória - 3D Visualizer");
+        setTitle("Labirinto da Glória - Visualizador 3D");
         setSize(1200, 800);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
@@ -93,7 +92,7 @@ public class GameGUI extends JFrame {
     }
 
     /**
-     * Applies a simple force-directed layout step to spread out overlapping rooms.
+     * Aplica um layout de forças simples para espalhar salas sobrepostas.
      */
     private void optimizeLayout() {
         int iterations = 100;

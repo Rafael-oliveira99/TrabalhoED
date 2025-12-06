@@ -18,93 +18,92 @@ import java.util.Iterator;
  */
 public class MazeMap {
 
-    /** The underlying graph data structure storing rooms and connections. */
-    private NetworkBiDirectional<Room> graph;
+    /** Grafo bidirecional que armazena salas e conexões. */
+    private NetworkBiDirectional<Room> grafo;
 
-    /** A secondary list to keep track of all rooms for easy lookup by ID. */
-    private ArrayUnorderedList<Room> roomList;
+    /** Lista secundária para manter todas as salas para pesquisa fácil por ID. */
+    private ArrayUnorderedList<Room> listaSalas;
 
     /**
-     * Initializes an empty MazeMap.
+     * Inicializa um Mapa vazio.
      */
     public MazeMap() {
-        this.graph = new NetworkBiDirectional<>();
-        this.roomList = new ArrayUnorderedList<>();
+        this.grafo = new NetworkBiDirectional<>();
+        this.listaSalas = new ArrayUnorderedList<>();
     }
 
     /**
-     * Adds a new room to the map.
+     * Adiciona uma nova sala ao mapa.
      *
-     * @param room The Room object to add.
+     * @param room A sala a adicionar.
      */
     public void addRoom(Room room) {
-        graph.addVertex(room);
-        roomList.addToRear(room);
+        grafo.addVertex(room);
+        listaSalas.addToRear(room);
     }
 
     /**
-     * Creates a connection (corridor) between two rooms with a specific weight.
+     * Cria uma conexão (corredor) entre duas salas com um peso específico.
      *
-     * @param from   The starting room.
-     * @param to     The destination room.
-     * @param weight The cost of traversing this edge (e.g., 1.0 for open, 1000.0
-     *               for locked).
+     * @param from   Sala de origem.
+     * @param to     Sala de destino.
+     * @param weight Custo de atravessar (ex: 1.0 para aberto, 1000.0 para
+     *               trancado).
      */
     public void addCorridor(Room from, Room to, double weight) {
-        graph.addEdge(from, to, weight);
+        grafo.addEdge(from, to, weight);
     }
 
     /**
-     * Unlocks a passage between two rooms by setting its weight to 1.0.
+     * Destranca uma passagem entre duas salas definindo o peso para 1.0.
      *
-     * @param from The starting room.
-     * @param to   The destination room.
+     * @param from Sala de origem.
+     * @param to   Sala de destino.
      */
     public void openPassage(Room from, Room to) {
-        // Re-adding the edge updates the weight to 1.0 (Open)
-        graph.addEdge(from, to, 1.0);
+        // Re-adicionar a aresta atualiza o peso para 1.0 (Aberto)
+        grafo.addEdge(from, to, 1.0);
     }
 
     /**
-     * Calculates the shortest path between two rooms using Dijkstra's algorithm.
+     * Calcula o caminho mais curto entre duas salas usando Dijkstra.
      *
-     * @param start  The starting Room.
-     * @param target The destination Room.
-     * @return An iterator containing the sequence of Rooms from start to target.
+     * @param start  Sala inicial.
+     * @param target Sala destino.
+     * @return Iterador com a sequência de salas.
      */
     public Iterator<Room> getShortestPath(Room start, Room target) {
-        return graph.iteratorShortestPath(start, target);
+        return grafo.iteratorShortestPath(start, target);
     }
 
     /**
-     * Retrieves an iterator for all rooms in the map.
+     * Devolve um iterador para todas as salas do mapa.
      *
-     * @return An iterator over all Room objects.
+     * @return Iterador sobre objetos Room.
      */
     public Iterator<Room> getRooms() {
-        return roomList.iterator();
+        return listaSalas.iterator();
     }
 
     /**
-     * Gets the weight (cost) of the shortest path between two rooms.
-     * Used to check if a direct connection is "locked" (weight > 100).
+     * Obtém o peso do caminho mais curto entre duas salas.
      *
-     * @param from The starting room.
-     * @param to   The destination room.
-     * @return The weight of the path.
+     * @param from Sala de origem.
+     * @param to   Sala de destino.
+     * @return O peso do caminho.
      */
     public double getWeight(Room from, Room to) {
-        return graph.shortestPathWeight(from, to);
+        return grafo.shortestPathWeight(from, to);
     }
 
     /**
-     * Finds a room object in the map by its string ID.
+     * Encontra uma sala pelo seu ID.
      *
-     * @param id The unique identifier (name) of the room.
-     * @return The Room object if found, or null otherwise.
+     * @param id Identificador único da sala.
+     * @return A Sala se encontrada, ou null.
      */
     public Room getRoom(String id) {
-        Iterator<Room> it = roomList.iterator();
+        Iterator<Room> it = listaSalas.iterator();
         while (it.hasNext()) {
             Room r = it.next();
             if (r.getId().equalsIgnoreCase(id)) {
@@ -115,19 +114,13 @@ public class MazeMap {
     }
 
     /**
-     * Checks if two rooms are directly connected (immediate neighbors).
-     *
-     * @param a The first room.
-     * @param b The second room.
-     * @return true if they are adjacent in the graph, false otherwise.
+     * Verifica se duas salas são vizinhas diretas.
      */
     public boolean isNeighbor(Room a, Room b) {
         if (a == null || b == null || a.equals(b))
             return false;
 
-        // We use the shortest path iterator.
-        // If they are neighbors, the path should have exactly 2 nodes: [Start, End]
-        Iterator<Room> it = graph.iteratorShortestPath(a, b);
+        Iterator<Room> it = grafo.iteratorShortestPath(a, b);
         int steps = 0;
         while (it.hasNext()) {
             it.next();
@@ -137,13 +130,7 @@ public class MazeMap {
     }
 
     /**
-     * Retrieves a list of all rooms directly connected to the specified room.
-     * <p>
-     * This method iterates through all rooms in the map and checks for adjacency.
-     * </p>
-     *
-     * @param current The room to find neighbors for.
-     * @return An iterator of adjacent Room objects.
+     * Devolve lista de vizinhos diretos.
      */
     public Iterator<Room> getNeighbors(Room current) {
         ArrayUnorderedList<Room> neighbors = new ArrayUnorderedList<>();
@@ -154,7 +141,6 @@ public class MazeMap {
             if (r.equals(current))
                 continue;
 
-            // Check if connected
             if (isNeighbor(current, r)) {
                 neighbors.addToRear(r);
             }

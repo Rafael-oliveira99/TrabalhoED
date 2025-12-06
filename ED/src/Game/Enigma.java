@@ -1,24 +1,24 @@
 package Game;
 
 public class Enigma {
-    private String question;
-    private String answer;
+    private String pergunta;
+    private String resposta;
 
-    public Enigma(String question, String answer) {
-        this.question = question;
-        this.answer = answer;
+    public Enigma(String pergunta, String resposta) {
+        this.pergunta = pergunta;
+        this.resposta = resposta;
     }
 
-    public String getQuestion() {
-        return question;
+    public String getPergunta() {
+        return pergunta;
     }
 
-    public boolean checkAnswer(String input) {
-        return answer.equalsIgnoreCase(input);
+    public boolean verificarResposta(String input) {
+        return resposta.equalsIgnoreCase(input);
     }
 
     @Override
     public String toString() {
-        return question;
+        return pergunta;
     }
 }

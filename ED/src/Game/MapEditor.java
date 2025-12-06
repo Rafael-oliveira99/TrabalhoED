@@ -33,14 +33,14 @@ public class MapEditor {
     }
 
     public void start() {
-        System.out.println("\n=== MAP EDITOR ===");
+        System.out.println("\n=== EDITOR DE MAPAS ===");
         boolean running = true;
         while (running) {
-            System.out.println("1. Add Room (Manual)");
-            System.out.println("2. Add Connection (Manual)");
-            System.out.println("3. Generate Random Map (Versatile)");
-            System.out.println("4. Save & Exit");
-            System.out.print("Choose: ");
+            System.out.println("1. Adicionar Sala (Manual)");
+            System.out.println("2. Adicionar Conexão (Manual)");
+            System.out.println("3. Gerar Mapa Aleatório (Versátil)");
+            System.out.println("4. Guardar & Sair");
+            System.out.print("Escolha: ");
             String op = scanner.next();
             scanner.nextLine(); // consume newline
 
@@ -65,40 +65,40 @@ public class MapEditor {
     }
 
     private void addRoom() {
-        System.out.print("Room ID: ");
+        System.out.print("ID da Sala: ");
         String id = scanner.nextLine();
-        System.out.print("Type (ENTRANCE, TREASURE, NORMAL): ");
+        System.out.print("Tipo (ENTRANCE, TREASURE, NORMAL): ");
         String type = scanner.nextLine();
-        System.out.print("Interaction (none, enigma, lever): ");
+        System.out.print("Interação (none, enigma, lever): ");
         String interact = scanner.nextLine();
 
-        System.out.print("X Coordinate (0-1000): ");
+        System.out.print("Coordenada X (0-1000): ");
         int x = scanner.nextInt();
-        System.out.print("Y Coordinate (0-800): ");
+        System.out.print("Coordenada Y (0-800): ");
         int y = scanner.nextInt();
         scanner.nextLine();
 
         rooms.addToRear(new Room(id, type, interact, x, y));
-        System.out.println("Room added.");
+        System.out.println("Sala adicionada.");
     }
 
     private void addConnection() {
-        System.out.print("From: ");
+        System.out.print("De: ");
         String from = scanner.nextLine();
-        System.out.print("To: ");
+        System.out.print("Para: ");
         String to = scanner.nextLine();
-        System.out.print("Cost: ");
+        System.out.print("Custo: ");
         int cost = scanner.nextInt();
         scanner.nextLine();
         connections.addToRear(new TempConnection(from, to, cost));
     }
 
     /**
-     * IMPROVED AUTOMATIC MAP GENERATOR
-     * Creates a non-linear, branching map with random coordinates and difficulty.
+     * GERADOR DE MAPAS (Traduzido)
+     * Cria um mapa não-linear aleatório.
      */
     private void generateRandomMap() {
-        System.out.print("How many rooms? (min 5, max 30): ");
+        System.out.print("Quantas salas? (min 5, max 30): ");
         int count = scanner.nextInt();
         scanner.nextLine();
         if (count < 5)
@@ -193,13 +193,13 @@ public class MapEditor {
         // a robust generator ensures solvability. This random version assumes
         // statistical solvability).
 
-        System.out.println("Map generated successfully!");
-        System.out.println("Rooms: " + count);
-        System.out.println("Don't forget to SAVE.");
+        System.out.println("Mapa gerado com sucesso!");
+        System.out.println("Salas: " + count);
+        System.out.println("Não te esqueças de GUARDAR.");
     }
 
     private void saveMap() {
-        System.out.print("Enter filename to save (e.g., random.json): ");
+        System.out.print("Nome do ficheiro para guardar (ex., random.json): ");
         String filename = scanner.nextLine();
         if (!filename.endsWith(".json"))
             filename += ".json";
@@ -225,7 +225,7 @@ public class MapEditor {
                 fw.write("\n");
             }
             fw.write("  ]\n}");
-            System.out.println("Saved to " + filename);
+            System.out.println("Guardado em " + filename);
         } catch (IOException e) {
             e.printStackTrace();
         }

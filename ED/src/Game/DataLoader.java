@@ -17,11 +17,12 @@ public class DataLoader {
             return;
         }
 
-        // --- 1. Parse Rooms (Updated Regex for X and Y) ---
+        // --- 1. Ler Salas (Regex Atualizado para X e Y) ---
         String roomsBlock = extractBlock(jsonContent, "\"rooms\"");
         if (roomsBlock != null) {
-            // Looks for: { "room": "A", "type": "B", "interaction": "C", "x": 100, "y": 200 }
-            Pattern roomPattern = Pattern.compile("\\{\\s*\"room\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"type\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"interaction\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"x\"\\s*:\\s*(\\d+)\\s*,\\s*\"y\"\\s*:\\s*(\\d+)\\s*\\}");
+            // Procura: { "room": "A", "type": "B", "interaction": "C", "x": 100, "y": 200 }
+            Pattern roomPattern = Pattern.compile(
+                    "\\{\\s*\"room\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"type\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"interaction\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"x\"\\s*:\\s*(\\d+)\\s*,\\s*\"y\"\\s*:\\s*(\\d+)\\s*\\}");
             Matcher m = roomPattern.matcher(roomsBlock);
 
             while (m.find()) {
@@ -36,10 +37,11 @@ public class DataLoader {
             }
         }
 
-        // --- 2. Parse Connections (Unchanged) ---
+        // --- 2. Ler Conexões (Inalterado) ---
         String connectionsBlock = extractBlock(jsonContent, "\"connections\"");
         if (connectionsBlock != null) {
-            Pattern connPattern = Pattern.compile("\\{\\s*\"from\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"to\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"cost\"\\s*:\\s*(\\d+)\\s*\\}");
+            Pattern connPattern = Pattern.compile(
+                    "\\{\\s*\"from\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"to\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"cost\"\\s*:\\s*(\\d+)\\s*\\}");
             Matcher m = connPattern.matcher(connectionsBlock);
 
             while (m.find()) {
@@ -57,12 +59,14 @@ public class DataLoader {
         }
     }
 
-    // ... (loadEnigmas, readFile, extractBlock, findRoom methods remain exactly the same) ...
+    // ... (loadEnigmas, readFile, extractBlock, findRoom methods remain exactly the
+    // same) ...
 
     public static ArrayUnorderedList<Enigma> loadEnigmas(String filePath) {
         ArrayUnorderedList<Enigma> list = new ArrayUnorderedList<>();
         String jsonContent = readFile(filePath);
-        Pattern enigmaPattern = Pattern.compile("\\{\\s*\"question\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"answer\"\\s*:\\s*\"([^\"]+)\"\\s*\\}");
+        Pattern enigmaPattern = Pattern
+                .compile("\\{\\s*\"question\"\\s*:\\s*\"([^\"]+)\"\\s*,\\s*\"answer\"\\s*:\\s*\"([^\"]+)\"\\s*\\}");
         Matcher m = enigmaPattern.matcher(jsonContent);
         while (m.find()) {
             list.addToRear(new Enigma(m.group(1), m.group(2)));
@@ -74,17 +78,22 @@ public class DataLoader {
         StringBuilder content = new StringBuilder();
         try (BufferedReader br = new BufferedReader(new FileReader(path))) {
             String line;
-            while ((line = br.readLine()) != null) content.append(line.trim());
-        } catch (IOException e) { e.printStackTrace(); }
+            while ((line = br.readLine()) != null)
+                content.append(line.trim());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         return content.toString();
     }
 
     private static String extractBlock(String content, String key) {
         int keyIndex = content.indexOf(key);
-        if (keyIndex == -1) return null;
+        if (keyIndex == -1)
+            return null;
         int startBracket = content.indexOf("[", keyIndex);
         int endBracket = content.indexOf("]", startBracket);
-        if (startBracket != -1 && endBracket != -1) return content.substring(startBracket, endBracket + 1);
+        if (startBracket != -1 && endBracket != -1)
+            return content.substring(startBracket, endBracket + 1);
         return null;
     }
 

@@ -10,11 +10,11 @@ public class Main {
 
         while (true) {
             System.out.println("\n=== LABIRINTO DA GLORIA ===");
-            System.out.println("1. Play Game (Console)");
-            System.out.println("2. Play Game (Graphical Interface)");
-            System.out.println("3. Map Editor (Create/Generate)");
-            System.out.println("0. Exit");
-            System.out.print("Select option: ");
+            System.out.println("1. Jogar (Consola)");
+            System.out.println("2. Jogar (Interface Gráfica)");
+            System.out.println("3. Editor de Mapas (Criar/Gerar)");
+            System.out.println("0. Sair");
+            System.out.print("Seleciona uma opção: ");
 
             String op = s.next();
             s.nextLine(); // consume newline
@@ -37,16 +37,18 @@ public class Main {
         GameEngine game = new GameEngine();
 
         // Ask for map file
-        System.out.print("Enter map file (default: src/Map/map.json): ");
+        System.out.print("Introduz ficheiro do mapa (default: src/Map/map.json): ");
         String filename = s.nextLine().trim();
         if (filename.isEmpty()) {
             filename = "src/Map/map.json";
+        } else if (!filename.endsWith(".json")) {
+            filename += ".json";
         }
 
         // Check if file exists
         File f = new File(filename);
         if (!f.exists()) {
-            System.out.println("Error: File not found: " + filename);
+            System.out.println("Erro: Ficheiro não encontrado: " + filename);
             return;
         }
 
@@ -69,14 +71,14 @@ public class Main {
         Room startRoom = null;
 
         if (entrances.isEmpty()) {
-            System.out.println("Error: No ENTRANCE rooms found in map! Defaulting to first room.");
+            System.out.println("Erro: Nenhuma sala 'ENTRANCE' encontrada! A usar a primeira sala.");
             startRoom = game.getMap().getRooms().next();
         } else if (entrances.size() == 1) {
             startRoom = entrances.first();
-            System.out.println("Only one entrance found: " + startRoom.getId());
+            System.out.println("Apenas uma entrada encontrada: " + startRoom.getId());
         } else {
             // Multiple entrances, ask user to choose
-            System.out.println("\nSelect a starting entrance:");
+            System.out.println("\nSeleciona a entrada:");
             Object[] entArray = new Object[entrances.size()];
             int idx = 0;
             for (Room r : entrances)
@@ -88,7 +90,7 @@ public class Main {
 
             int choice = -1;
             while (true) {
-                System.out.print("Choice: ");
+                System.out.print("Opção: ");
                 try {
                     String input = s.nextLine().trim();
                     choice = Integer.parseInt(input);
@@ -98,7 +100,7 @@ public class Main {
                     }
                 } catch (NumberFormatException e) {
                 }
-                System.out.println("Invalid choice. Please enter a number between 1 and " + entArray.length);
+                System.out.println("Inválido. Insere um número entre 1 e " + entArray.length);
             }
         }
 

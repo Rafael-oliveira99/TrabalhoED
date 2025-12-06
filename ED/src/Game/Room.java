@@ -6,13 +6,13 @@ public class Room implements Comparable<Room> {
     private String id;
     private String type;
     private String interaction;
-    private boolean hasLever;
+    private boolean hasLever; // se tem alavanca
 
-    // --- NEW COORDINATES ---
+    // --- Coordenadas ---
     private int x;
     private int y;
 
-    // Updated Constructor
+    // Construtor Atualizado
     public Room(String id, String type, String interaction, int x, int y) {
         this.id = id;
         this.type = type;

@@ -2,20 +2,23 @@
   {
     "name": "Player 1",
     "log": [
-      "Started game at Entrada",
-      "Moved to Sala 1",
-      "Event: Gained extra turn.",
-      "Moved to Sala 2",
-      "Moved to Tesouro",
-      "Found the treasure and won!"
+      "Começou o jogo na sala Entrada",
+      "Moveu-se para Sala 17",
+      "Evento: Ganhou turno extra.",
+      "Moveu-se para Sala 28",
+      "Resolveu enigma: My age",
+      "Moveu-se para Sala 17",
+      "Moveu-se para Entrada"
     ]
   },
   {
     "name": "Bot Alpha",
     "log": [
-      "Started game at Entrada",
-      "Moved to Sala 1",
-      "Moved to Sala 2"
+      "Começou o jogo na sala Entrada",
+      "Moveu-se para Sala 6",
+      "Moveu-se para Sala 8",
+      "Moveu-se para Tesouro",
+      "Encontrou o tesouro e ganhou!"
     ]
   }
 ]

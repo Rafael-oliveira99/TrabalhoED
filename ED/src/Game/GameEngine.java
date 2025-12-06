@@ -58,7 +58,7 @@ public class GameEngine {
 
     public void stopGame() {
         this.gameRunning = false;
-        printMsg("Game stopped. Generating report...");
+        printMsg("Jogo parado. A gerar relatório...");
     }
 
     private void printMsg(String msg) {
@@ -140,8 +140,8 @@ public class GameEngine {
 
             // Check for Stun
             if (current.getSkipTurns() > 0) {
-                printMsg("\n>> Turn: " + current.getName() + " is stunned! (Skips turn)");
-                current.addToLog("Skipped turn due to stun.");
+                printMsg("\n>> Turno: " + current.getName() + " está atordoado! (Passa a vez)");
+                current.addToLog("Passou a vez por estar atordoado.");
                 current.setSkipTurns(current.getSkipTurns() - 1);
                 turnQueue.enqueue(current);
                 try {
@@ -154,8 +154,8 @@ public class GameEngine {
             if (!gameRunning)
                 break;
 
-            printMsg("\n>> Turn: " + current.getName() + " (" + (current.isBot() ? "Bot" : "Human") + ")");
-            printMsg("Current Location: " + current.getCurrentRoom());
+            printMsg("\n>> Turno: " + current.getName() + " (" + (current.isBot() ? "Bot" : "Humano") + ")");
+            printMsg("Localização Atual: " + current.getCurrentRoom());
 
             if (current.isBot()) {
                 playBotTurn(current);
@@ -165,11 +165,11 @@ public class GameEngine {
 
             // Check Win Condition
             if (current.getCurrentRoom() != null && current.getCurrentRoom().getType().equals("TREASURE")) {
-                printMsg("!!! WE HAVE A WINNER: " + current.getName() + " !!!");
-                current.addToLog("Found the treasure and won!");
+                printMsg("!!! TEMOS UM VENCEDOR: " + current.getName() + " !!!");
+                current.addToLog("Encontrou o tesouro e ganhou!");
                 gameRunning = false;
                 if (gui != null)
-                    JOptionPane.showMessageDialog(gui, "Winner: " + current.getName());
+                    JOptionPane.showMessageDialog(gui, "Vencedor: " + current.getName());
             } else {
                 turnQueue.enqueue(current);
             }
@@ -192,14 +192,14 @@ public class GameEngine {
                 double weight = map.getWeight(bot.getCurrentRoom(), nextMove);
 
                 if (weight > 100) {
-                    printMsg("Bot is blocked by a locked door at " + nextMove.getId());
+                    printMsg("Bot bloqueado por porta trancada em " + nextMove.getId());
                     if (bot.getCurrentRoom().getInteraction().equals("lever")) {
                         pullLever(bot);
                     } else {
-                        printMsg("Bot waits.");
+                        printMsg("Bot à espera.");
                     }
                 } else {
-                    printMsg("Bot moving to: " + nextMove.getId());
+                    printMsg("Bot a mover-se para: " + nextMove.getId());
                     movePlayerWithAnimation(bot, nextMove);
 
                     // FIX 1: Only trigger event if NOT in treasure room
@@ -208,7 +208,7 @@ public class GameEngine {
                     }
                 }
             } else {
-                printMsg("Bot is confused.");
+                printMsg("Bot está confuso.");
             }
         }
     }
@@ -225,22 +225,22 @@ public class GameEngine {
             player.setHasInteracted(true);
         }
 
-        printMsg("Neighbors:");
+        printMsg("Vizinhos:");
         Iterator<Room> rooms = map.getRooms();
         while (rooms.hasNext()) {
             Room r = rooms.next();
             if (map.isNeighbor(current, r)) {
                 double weight = map.getWeight(current, r);
-                String status = (weight > 100) ? "[LOCKED]" : "[OPEN]";
+                String status = (weight > 100) ? "[TRANCADO]" : "[ABERTO]";
                 printMsg(" - " + r.getId() + " " + status);
             }
         }
 
         String targetName = null;
         if (gui != null) {
-            targetName = JOptionPane.showInputDialog(gui, "Type room name to move:");
+            targetName = JOptionPane.showInputDialog(gui, "Escreve o nome da sala para mover:");
         } else {
-            System.out.println("Type room name to move:");
+            System.out.println("Escreve o nome da sala para mover:");
             if (consoleScanner.hasNextLine())
                 targetName = consoleScanner.nextLine();
         }
@@ -251,12 +251,12 @@ public class GameEngine {
         Room target = map.getRoom(targetName);
 
         if (target == null) {
-            printMsg("Room not found!");
+            printMsg("Sala não encontrada!");
             return;
         }
 
         if (!map.isNeighbor(current, target)) {
-            printMsg("You can't move there directly!");
+            printMsg("Não podes ir para aí diretamente!");
             return;
         }
 
@@ -270,7 +270,7 @@ public class GameEngine {
                 triggerRandomEvent(player);
             }
         } else {
-            printMsg("Path blocked! Find a lever.");
+            printMsg("Caminho bloqueado! Encontra uma alavanca.");
         }
     }
 
@@ -293,30 +293,30 @@ public class GameEngine {
         // Remove it to prevent repetition
         availableEnigmas.remove(e);
 
-        printMsg("Enigma: " + e.getQuestion());
+        printMsg("Enigma: " + e.getPergunta());
 
         String input = "";
         if (gui != null) {
-            input = JOptionPane.showInputDialog(gui, "Answer the Enigma:\n" + e.getQuestion());
+            input = JOptionPane.showInputDialog(gui, "Responde ao Enigma:\n" + e.getPergunta());
         } else {
-            System.out.print("Answer: ");
+            System.out.print("Resposta: ");
             if (consoleScanner.hasNext())
                 input = consoleScanner.next();
             consoleScanner.nextLine(); // consume newline
         }
 
-        if (e.checkAnswer(input)) {
-            printMsg("Correct!");
-            p.addToLog("Solved enigma: " + e.getQuestion());
+        if (e.verificarResposta(input)) {
+            printMsg("Correto!");
+            p.addToLog("Resolveu enigma: " + e.getPergunta());
         } else {
-            printMsg("Wrong!");
-            p.addToLog("Failed enigma.");
+            printMsg("Errado!");
+            p.addToLog("Falhou enigma.");
         }
     }
 
     private void pullLever(Player p) {
-        printMsg("You found a lever! You pulled it.");
-        p.addToLog("Pulled a lever.");
+        printMsg("Encontraste uma alavanca! Puxaste-a.");
+        p.addToLog("Puxou uma alavanca.");
 
         Iterator<Room> neighbors = map.getNeighbors(p.getCurrentRoom());
         boolean unlockedAny = false;
@@ -329,7 +329,7 @@ public class GameEngine {
         }
 
         if (unlockedAny)
-            printMsg("*CLICK* A nearby door unlocks!");
+            printMsg("*CLICK* Uma porta próxima destrancou-se!");
 
         // Explicitly unlock treasure if adjacent
         Room treasure = map.getRoom("Tesouro");
@@ -342,21 +342,21 @@ public class GameEngine {
         int chance = (int) (Math.random() * 100);
 
         if (chance < 10) {
-            printMsg("!!! EVENT: A mysterious wind pushes you back! !!!");
-            p.addToLog("Event: Pushed back.");
+            printMsg("!!! EVENTO: Um vento misterioso empurrou-te para trás! !!!");
+            p.addToLog("Evento: Empurrado para trás.");
             if (p.getPreviousRoom() != null) {
                 Room prev = p.getPreviousRoom();
                 movePlayerWithAnimation(p, prev);
-                printMsg("You were moved back to " + prev.getId());
+                printMsg("Foste movido para " + prev.getId());
             }
         } else if (chance < 20) {
-            printMsg("!!! EVENT: You fell into a trap! You are stunned for 1 turn. !!!");
-            p.addToLog("Event: Stunned by trap.");
+            printMsg("!!! EVENTO: Caiste numa armadilha! Ficas atordoado 1 turno. !!!");
+            p.addToLog("Evento: Atordoado por armadilha.");
             p.setSkipTurns(1);
         } else if (chance < 30) {
             if (allPlayers.size() > 1) {
-                printMsg("!!! EVENT: TELEPORT SPELL! Swapping positions... !!!");
-                p.addToLog("Event: Swapped positions.");
+                printMsg("!!! EVENTO: FEITIÇO DE TELEPORTE! Trocando posições... !!!");
+                p.addToLog("Evento: Trocou posições.");
                 Player target = null;
                 Iterator<Player> it = allPlayers.iterator();
                 while (it.hasNext()) {
@@ -371,12 +371,12 @@ public class GameEngine {
                     Room targetRoom = target.getCurrentRoom();
                     movePlayerWithAnimation(p, targetRoom);
                     movePlayerWithAnimation(target, myRoom);
-                    printMsg("Swapped positions with " + target.getName());
+                    printMsg("Trocou de posição com " + target.getName());
                 }
             }
         } else if (chance < 40) {
-            printMsg("!!! EVENT: Adrenaline Rush! You get an extra turn! !!!");
-            p.addToLog("Event: Gained extra turn.");
+            printMsg("!!! EVENTO: Adrenalina! Ganhas um turno extra! !!!");
+            p.addToLog("Evento: Ganhou turno extra.");
             if (p.isBot())
                 playBotTurn(p);
             else
@@ -386,7 +386,7 @@ public class GameEngine {
 
     public void generateJSONReport() {
         exportReport();
-        printMsg("Report generated: report.json");
+        printMsg("Relatório gerado: report.json");
     }
 
     public void exportReport() {
