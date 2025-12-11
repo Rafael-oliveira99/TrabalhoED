@@ -2,17 +2,17 @@ package Game;
 
 import java.util.Objects;
 
+// Representa uma sala do labirinto
 public class Room implements Comparable<Room> {
-    private String id;
-    private String type;
-    private String interaction;
+    private String id; // nome da sala
+    private String type; // ENTRANCE, TREASURE, NORMAL
+    private String interaction; // none, enigma, lever
     private boolean hasLever;
 
-    // --- NEW COORDINATES ---
+    // coordenadas no mapa visual
     private int x;
     private int y;
 
-    // Updated Constructor
     public Room(String id, String type, String interaction, int x, int y) {
         this.id = id;
         this.type = type;
@@ -46,7 +46,7 @@ public class Room implements Comparable<Room> {
         this.hasLever = hasLever;
     }
 
-    // Getters for coords
+    // getters e setters das coordenadas
     public int getX() {
         return x;
     }

@@ -1,21 +1,36 @@
 [
   {
-    "name": "Player 1",
+    "name": "Bot Alpha",
     "log": [
-      "Started game at Entrada",
-      "Moved to Sala 1",
+      "Started game at Entrada Leste",
+      "Moved to Sala 3",
       "Event: Gained extra turn.",
-      "Moved to Sala 2",
       "Moved to Tesouro",
       "Found the treasure and won!"
     ]
   },
   {
-    "name": "Bot Alpha",
+    "name": "Bot Beta",
     "log": [
-      "Started game at Entrada",
-      "Moved to Sala 1",
-      "Moved to Sala 2"
+      "Started game at Entrada Leste"
+    ]
+  },
+  {
+    "name": "Bot Gamma",
+    "log": [
+      "Started game at Entrada Norte"
+    ]
+  },
+  {
+    "name": "Bot Delta",
+    "log": [
+      "Started game at Entrada Leste"
+    ]
+  },
+  {
+    "name": "Bot Epsilon",
+    "log": [
+      "Started game at Entrada Sul"
     ]
   }
 ]

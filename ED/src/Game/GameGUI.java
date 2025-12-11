@@ -41,6 +41,9 @@ public class GameGUI extends JFrame {
     private double animProgress = 0.0;
     private Timer animationTimer;
 
+    // --- HOVER STATE para destacar conexões ---
+    private Room hoveredRoom = null;
+
     /**
      * Constructs the GameGUI.
      *
@@ -96,8 +99,8 @@ public class GameGUI extends JFrame {
      * Applies a simple force-directed layout step to spread out overlapping rooms.
      */
     private void optimizeLayout() {
-        int iterations = 100;
-        int minDistance = 80;
+        int iterations = 400; // mais iterações para espalhar bem as salas
+        int minDistance = 200; // distância maior para visualização clara
         int width = 1100; // slightly less than window width
         int height = 700; // slightly less than window height
 
@@ -138,7 +141,7 @@ public class GameGUI extends JFrame {
                             dist = 1;
                         }
 
-                        double force = (minDistance - dist) / 2.0;
+                        double force = (minDistance - dist) / 1.5; // aumentar força de repulsão
                         double fx = (dx / dist) * force;
                         double fy = (dy / dist) * force;
 
@@ -205,6 +208,34 @@ public class GameGUI extends JFrame {
         public GamePanel() {
             // Dark background, but we will paint over it with a gradient
             setBackground(new Color(20, 20, 25));
+
+            // Adicionar mouse listener para hover sobre salas
+            addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+                @Override
+                public void mouseMoved(java.awt.event.MouseEvent e) {
+                    Room oldHovered = hoveredRoom;
+                    hoveredRoom = null;
+
+                    // Verificar se o rato está sobre alguma sala
+                    Iterator<Room> it = map.getRooms();
+                    while (it.hasNext()) {
+                        Room r = it.next();
+                        int dx = e.getX() - r.getX();
+                        int dy = e.getY() - r.getY();
+                        double dist = Math.sqrt(dx * dx + dy * dy);
+
+                        if (dist < 30) { // raio de detecção maior que a sala
+                            hoveredRoom = r;
+                            break;
+                        }
+                    }
+
+                    // Repintar se mudou a sala com hover
+                    if (oldHovered != hoveredRoom) {
+                        repaint();
+                    }
+                }
+            });
         }
 
         @Override
@@ -247,20 +278,29 @@ public class GameGUI extends JFrame {
                     if (map.isNeighbor(r1, r2)) {
                         double weight = map.getWeight(r1, r2);
 
+                        // Verificar se esta conexão deve ser destacada (hover)
+                        boolean isHighlighted = (hoveredRoom == r1 || hoveredRoom == r2);
+
                         // Draw Shadow/Glow first
                         if (weight > 100) {
                             // Locked: Red Glow
-                            g2.setColor(new Color(255, 0, 0, 50));
-                            g2.setStroke(new BasicStroke(6));
+                            g2.setColor(new Color(255, 0, 0, isHighlighted ? 150 : 50));
+                            g2.setStroke(new BasicStroke(isHighlighted ? 8 : 6));
                             g2.drawLine(r1.getX(), r1.getY(), r2.getX(), r2.getY());
 
                             // Core Line
                             g2.setColor(new Color(200, 50, 50));
-                            g2.setStroke(new BasicStroke(2));
+                            g2.setStroke(new BasicStroke(isHighlighted ? 4 : 2));
                         } else {
-                            // Open: Subtle Blue/Gray
-                            g2.setColor(new Color(100, 120, 140, 100));
-                            g2.setStroke(new BasicStroke(2));
+                            // Open: Subtle Blue/Gray (ou brilhante se hover)
+                            if (isHighlighted) {
+                                // Destacar com cor brilhante
+                                g2.setColor(new Color(100, 255, 255, 200));
+                                g2.setStroke(new BasicStroke(5));
+                            } else {
+                                g2.setColor(new Color(100, 120, 140, 100));
+                                g2.setStroke(new BasicStroke(2));
+                            }
                         }
                         g2.drawLine(r1.getX(), r1.getY(), r2.getX(), r2.getY());
                     }
@@ -287,6 +327,12 @@ public class GameGUI extends JFrame {
             int y = r.getY();
             int size = 50;
             int shadowOffset = 5;
+
+            // Aumentar tamanho se estiver em hover
+            boolean isHovered = (r == hoveredRoom);
+            if (isHovered) {
+                size = 60; // sala fica maior ao passar o rato
+            }
 
             // 1. Drop Shadow
             g2.setColor(new Color(0, 0, 0, 100));

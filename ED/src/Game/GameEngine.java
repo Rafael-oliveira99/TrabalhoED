@@ -126,7 +126,17 @@ public class GameEngine {
             System.out.println("Warning: Start room '" + startRoom.getId() + "' not found in map!");
         }
 
-        Color c = isBot ? new Color(255, 80, 80) : new Color(80, 150, 255);
+        // Assign unique colors based on player count (supports up to 4 players)
+        Color[] playerColors = {
+                new Color(80, 150, 255), // Player 1: Blue
+                new Color(80, 255, 150), // Player 2: Green
+                new Color(255, 180, 80), // Player 3: Orange
+                new Color(180, 80, 255) // Player 4: Purple
+        };
+
+        int playerIndex = allPlayers.size() % playerColors.length;
+        Color c = playerColors[playerIndex];
+
         Player p = new Player(name, isBot, startRoom, c);
         turnQueue.enqueue(p);
         allPlayers.addToRear(p);
@@ -355,17 +365,84 @@ public class GameEngine {
             p.setSkipTurns(1);
         } else if (chance < 30) {
             if (allPlayers.size() > 1) {
-                printMsg("!!! EVENT: TELEPORT SPELL! Swapping positions... !!!");
+                printMsg("!!! EVENT: TELEPORT SPELL! Choose a player to swap positions with... !!!");
                 p.addToLog("Event: Swapped positions.");
-                Player target = null;
+
+                // Build list of other players
+                ArrayUnorderedList<Player> otherPlayers = new ArrayUnorderedList<>();
                 Iterator<Player> it = allPlayers.iterator();
                 while (it.hasNext()) {
                     Player other = it.next();
                     if (!other.equals(p)) {
-                        target = other;
-                        break;
+                        otherPlayers.addToRear(other);
                     }
                 }
+
+                Player target = null;
+
+                if (otherPlayers.isEmpty()) {
+                    printMsg("No other players to swap with!");
+                } else if (p.isBot()) {
+                    // Bot picks first available player
+                    target = otherPlayers.first();
+                } else {
+                    // Human player chooses
+                    if (gui != null) {
+                        // GUI mode: show dialog with player list
+                        Object[] playerArray = new Object[otherPlayers.size()];
+                        int idx = 0;
+                        for (Player other : otherPlayers) {
+                            playerArray[idx++] = other.getName() + " [at " + other.getCurrentRoom().getId() + "]";
+                        }
+
+                        String choice = (String) JOptionPane.showInputDialog(
+                                gui,
+                                "Choose a player to swap positions with:",
+                                "Teleport Spell",
+                                JOptionPane.QUESTION_MESSAGE,
+                                null,
+                                playerArray,
+                                playerArray[0]);
+
+                        if (choice != null) {
+                            // Find selected player
+                            idx = 0;
+                            for (Player other : otherPlayers) {
+                                if (choice.startsWith(other.getName())) {
+                                    target = other;
+                                    break;
+                                }
+                                idx++;
+                            }
+                        }
+                    } else {
+                        // Console mode: show numbered list
+                        printMsg("Select a player to swap with:");
+                        Object[] playerArray = new Object[otherPlayers.size()];
+                        int idx = 0;
+                        for (Player other : otherPlayers) {
+                            playerArray[idx] = other;
+                            printMsg((idx + 1) + ". " + other.getName() + " [at " + other.getCurrentRoom().getId()
+                                    + "]");
+                            idx++;
+                        }
+
+                        int choice = -1;
+                        while (choice < 1 || choice > playerArray.length) {
+                            System.out.print("Your choice (1-" + playerArray.length + "): ");
+                            try {
+                                if (consoleScanner.hasNextLine()) {
+                                    String input = consoleScanner.nextLine().trim();
+                                    choice = Integer.parseInt(input);
+                                }
+                            } catch (NumberFormatException e) {
+                                printMsg("Invalid input!");
+                            }
+                        }
+                        target = (Player) playerArray[choice - 1];
+                    }
+                }
+
                 if (target != null) {
                     Room myRoom = p.getCurrentRoom();
                     Room targetRoom = target.getCurrentRoom();

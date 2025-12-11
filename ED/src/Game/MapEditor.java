@@ -95,16 +95,25 @@ public class MapEditor {
 
     /**
      * IMPROVED AUTOMATIC MAP GENERATOR
-     * Creates a non-linear, branching map with random coordinates and difficulty.
+     * Creates a non-linear, branching map with multiple entrances and treasure at
+     * center.
      */
     private void generateRandomMap() {
-        System.out.print("How many rooms? (min 5, max 30): ");
+        System.out.print("How many rooms? (min 8, max 30): ");
         int count = scanner.nextInt();
         scanner.nextLine();
-        if (count < 5)
-            count = 5;
+        if (count < 8)
+            count = 8;
         if (count > 30)
             count = 30;
+
+        System.out.print("How many entrances? (min 2, max 5): ");
+        int numEntrances = scanner.nextInt();
+        scanner.nextLine();
+        if (numEntrances < 2)
+            numEntrances = 2;
+        if (numEntrances > 5)
+            numEntrances = 5;
 
         // Reset lists
         rooms = new ArrayUnorderedList<>();
@@ -114,37 +123,49 @@ public class MapEditor {
         Room[] tempRooms = new Room[count];
         String[] interactions = { "none", "none", "enigma", "lever", "none", "enigma" };
 
-        // 1. Create Start Room (Center-ish)
-        tempRooms[0] = new Room("Entrada", "ENTRANCE", "none", 400, 400);
+        // 1. Create Treasure Room at Center
+        tempRooms[0] = new Room("Tesouro", "TREASURE", "none", 500, 400);
         rooms.addToRear(tempRooms[0]);
 
-        // 2. Generate Rooms & Backbone Tree (Branching)
-        // Instead of a straight line (i connects to i-1), connect i to a RANDOM
-        // previous room.
-        for (int i = 1; i < count; i++) {
-            // Determine Type
-            String type = "NORMAL";
-            String name = "Sala " + i;
+        // 2. Create Multiple Entrances around the edges
+        String[] directions = { "Norte", "Sul", "Leste", "Oeste", "Nordeste", "Sudeste", "Sudoeste", "Noroeste" };
+        int[][] entrancePositions = {
+                { 500, 50 }, // Norte (top center)
+                { 500, 750 }, // Sul (bottom center)
+                { 950, 400 }, // Leste (right center)
+                { 50, 400 }, // Oeste (left center)
+                { 800, 100 }, // Nordeste
+                { 800, 700 }, // Sudeste
+                { 200, 700 }, // Sudoeste
+                { 200, 100 } // Noroeste
+        };
 
-            // Make the last generated room the Treasure? Or random?
-            // Let's make the last one Treasure for simplicity of distance
-            if (i == count - 1) {
-                type = "TREASURE";
-                name = "Tesouro";
-            }
+        int entranceIndex = 1;
+        for (int e = 0; e < numEntrances && e < directions.length; e++) {
+            String entranceName = "Entrada " + directions[e];
+            tempRooms[entranceIndex] = new Room(entranceName, "ENTRANCE", "none",
+                    entrancePositions[e][0], entrancePositions[e][1]);
+            rooms.addToRear(tempRooms[entranceIndex]);
+            entranceIndex++;
+        }
 
+        // 3. Generate Normal Rooms between entrances and treasure
+        int currentRoomIndex = numEntrances + 1;
+        int normalRoomsCount = count - numEntrances - 1; // Total - entrances - treasure
+
+        for (int i = 0; i < normalRoomsCount; i++) {
+            String name = "Sala " + (i + 1);
             String interact = interactions[rand.nextInt(interactions.length)];
-            if (type.equals("TREASURE") || type.equals("ENTRANCE"))
-                interact = "none";
 
-            // Pick a random parent from existing rooms to attach to
-            int parentIndex = rand.nextInt(i);
+            // Pick a random existing room to attach to (can be treasure, entrance, or other
+            // room)
+            int parentIndex = rand.nextInt(currentRoomIndex);
             Room parent = tempRooms[parentIndex];
 
             // Calculate Coordinates (Random direction from parent)
-            // Distance roughly 100-150 pixels
+            // Distance roughly 100-200 pixels
             double angle = rand.nextDouble() * 2 * Math.PI;
-            int dist = 100 + rand.nextInt(50);
+            int dist = 100 + rand.nextInt(100);
             int newX = parent.getX() + (int) (Math.cos(angle) * dist);
             int newY = parent.getY() + (int) (Math.sin(angle) * dist);
 
@@ -158,43 +179,67 @@ public class MapEditor {
             if (newY > 750)
                 newY = 750;
 
-            Room newRoom = new Room(name, type, interact, newX, newY);
-            tempRooms[i] = newRoom;
+            Room newRoom = new Room(name, "NORMAL", interact, newX, newY);
+            tempRooms[currentRoomIndex] = newRoom;
             rooms.addToRear(newRoom);
 
             // Connect Parent <-> Child (Cost 1 initially)
             connections.addToRear(new TempConnection(parent.getId(), newRoom.getId(), 1));
+            currentRoomIndex++;
         }
 
         System.out.println("Backbone generated. Adding complexity...");
 
-        // 3. Add Extra Edges (Cycles) & Locks
-        // Randomly connect some rooms to create loops, making it a maze graph, not just
-        // a tree.
+        // 4. Ensure all entrances have a path toward the treasure
+        // Connect each entrance to at least one room (possibly the treasure itself)
+        for (int e = 1; e <= numEntrances; e++) {
+            // Check if entrance already has connections
+            boolean hasConnection = false;
+            Iterator<TempConnection> it = connections.iterator();
+            while (it.hasNext()) {
+                TempConnection conn = it.next();
+                if (conn.from.equals(tempRooms[e].getId()) || conn.to.equals(tempRooms[e].getId())) {
+                    hasConnection = true;
+                    break;
+                }
+            }
+
+            // If no connection, connect to a random room or treasure
+            if (!hasConnection) {
+                int targetIndex = rand.nextInt(count);
+                if (targetIndex != e) { // Don't connect to itself
+                    connections.addToRear(new TempConnection(tempRooms[e].getId(), tempRooms[targetIndex].getId(), 1));
+                }
+            }
+        }
+
+        // 5. Add Extra Edges (Cycles) & Locks
+        // Randomly connect some rooms to create loops, making it a maze graph
         int extraEdges = count / 3;
         for (int k = 0; k < extraEdges; k++) {
             int i1 = rand.nextInt(count);
             int i2 = rand.nextInt(count);
 
             if (i1 != i2) {
-                // Connect them with a high chance of being "Locked" if it's a shortcut
-                // Or just random locks
-                int cost = (rand.nextInt(100) < 30) ? 1000 : 1; // 30% chance to be locked
+                // IMPORTANTE: Nunca bloquear conexões que envolvem o tesouro!
+                // O tesouro é sempre tempRooms[0]
+                boolean isTreasureConnection = (i1 == 0 || i2 == 0);
+
+                int cost;
+                if (isTreasureConnection) {
+                    cost = 1; // conexões ao tesouro SEMPRE abertas
+                } else {
+                    cost = (rand.nextInt(100) < 30) ? 1000 : 1; // 30% chance de bloquear OUTRAS conexões
+                }
 
                 connections.addToRear(new TempConnection(tempRooms[i1].getId(), tempRooms[i2].getId(), cost));
             }
         }
 
-        // 4. Randomly Lock Existing Edges (to force finding levers)
-        // We iterate our temp connections? No, difficult to access.
-        // Simplified: Just rely on the extra edges for locks or add logic here.
-        // Let's ensure at least one Lever exists if there are locks.
-        // (Already handled by random interaction assignment, but strictly speaking,
-        // a robust generator ensures solvability. This random version assumes
-        // statistical solvability).
-
         System.out.println("Map generated successfully!");
-        System.out.println("Rooms: " + count);
+        System.out.println("Total Rooms: " + count);
+        System.out.println("Entrances: " + numEntrances);
+        System.out.println("Treasure is at the CENTER!");
         System.out.println("Don't forget to SAVE.");
     }
 
