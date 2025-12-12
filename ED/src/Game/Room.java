@@ -1,7 +1,5 @@
 package Game;
 
-import java.util.Objects;
-
 // Representa uma sala do labirinto
 public class Room implements Comparable<Room> {
     private String id; // nome da sala
@@ -26,8 +24,16 @@ public class Room implements Comparable<Room> {
         return id;
     }
 
+    public void setId(String id) {
+        this.id = id;
+    }
+
     public String getType() {
         return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getInteraction() {
@@ -75,7 +81,8 @@ public class Room implements Comparable<Room> {
         if (o == null || getClass() != o.getClass())
             return false;
         Room room = (Room) o;
-        return Objects.equals(id, room.id);
+        // Comparação manual sem Objects.equals
+        return (id == null ? room.id == null : id.equals(room.id));
     }
 
     @Override

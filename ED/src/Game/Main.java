@@ -12,11 +12,10 @@ public class Main {
         // loop principal do menu
         while (true) {
             System.out.println("\n=== LABIRINTO DA GLORIA ===");
-            System.out.println("1. Play Game (Console)");
-            System.out.println("2. Play Game (Graphical Interface)");
-            System.out.println("3. Map Editor (Create/Generate)");
-            System.out.println("0. Exit");
-            System.out.print("Select option: ");
+            System.out.println("1. Jogar");
+            System.out.println("2. Editor de Mapas (Criar/Gerar)");
+            System.out.println("0. Sair");
+            System.out.print("Selecione opção: ");
 
             String op = s.next();
             s.nextLine(); // consumir o newline que sobra
@@ -24,23 +23,23 @@ public class Main {
             if (op.equals("0"))
                 break; // sair do programa
 
-            if (op.equals("3")) {
+            if (op.equals("2")) {
                 // abrir o editor de mapas
                 MapEditor editor = new MapEditor();
                 editor.start();
-            } else if (op.equals("1") || op.equals("2")) {
-                startGame(op.equals("2"), s); // iniciar jogo (com ou sem GUI)
+            } else if (op.equals("1")) {
+                startGame(s); // iniciar jogo
             } else {
-                System.out.println("Invalid option.");
+                System.out.println("Opção inválida.");
             }
         }
     }
 
-    private static void startGame(boolean useGui, Scanner s) {
+    private static void startGame(Scanner s) {
         GameEngine game = new GameEngine();
 
         // pedir o ficheiro do mapa
-        System.out.print("Enter map file (default: src/Map/map.json): ");
+        System.out.print("Ficheiro do mapa (padrão: src/Map/map.json): ");
         String filename = s.nextLine().trim();
 
         String finalPath = null;
@@ -96,17 +95,13 @@ public class Main {
         // verificar se o ficheiro existe
         File f = new File(finalPath);
         if (!f.exists()) {
-            System.out.println("Error: File not found: " + finalPath);
-            System.out.println("Tried to find map in multiple locations but couldn't find it.");
+            System.out.println("Erro: Ficheiro não encontrado: " + finalPath);
+            System.out.println("Tentou procurar o mapa em vários locais mas não foi encontrado.");
             return;
         }
 
-        System.out.println("Loading map from: " + finalPath);
+        System.out.println("A carregar mapa de: " + finalPath);
         game.loadMapData(finalPath);
-
-        if (useGui) {
-            game.enableGUI(); // ativar interface gráfica se foi escolhida
-        }
 
         // procurar todas as salas de entrada no mapa
         LinkedUnorderedList<Room> entrances = new LinkedUnorderedList<>();
@@ -126,143 +121,116 @@ public class Main {
 
         // se não houver entradas, usar a primeira sala
         if (entrances.isEmpty()) {
-            System.out.println("Warning: No ENTRANCE rooms found! Using first room as default.");
+            System.out.println("Aviso: Nenhuma sala ENTRANCE encontrada! A usar primeira sala como padrão.");
             entArray = new Object[1];
             entArray[0] = game.getMap().getRooms().next();
         }
 
-        // escolher o modo de jogo (Manual ou Automático)
-        System.out.println("\n=== GAME MODE SELECTION ===");
-        System.out.println("1. Manual Mode (Human players + Bot)");
-        System.out.println("2. Automatic Mode (Only Bots)");
+        // escolher quantos jogadores (1-4)
+        System.out.println("\n=== CONFIGURAÇÃO DE JOGADORES ===");
 
-        boolean isAutomaticMode = false;
-        while (true) {
-            System.out.print("Select mode (1-2): ");
-            String modeChoice = s.nextLine().trim();
-            if (modeChoice.equals("1")) {
-                isAutomaticMode = false;
-                System.out.println("\n✓ Manual Mode selected");
-                break;
-            } else if (modeChoice.equals("2")) {
-                isAutomaticMode = true;
-                System.out.println("\n✓ Automatic Mode selected");
-                break;
-            } else {
-                System.out.println("Invalid! Please enter 1 or 2.");
+        int numPlayers = 0;
+        while (numPlayers < 1 || numPlayers > 4) {
+            System.out.print("\nQuantos jogadores? (1-4): ");
+            try {
+                String input = s.nextLine().trim();
+                numPlayers = Integer.parseInt(input);
+                if (numPlayers < 1 || numPlayers > 4) {
+                    System.out.println("Inválido! Por favor, insira um número entre 1 e 4.");
+                }
+            } catch (NumberFormatException e) {
+                System.out.println("Entrada inválida! Por favor, insira um número.");
             }
         }
 
-        System.out.println("\n=== PLAYER CONFIGURATION ===");
+        // Configurar cada jogador individualmente
+        int humanCount = 0;
+        int botCount = 0;
 
-        if (isAutomaticMode) {
-            // AUTOMATIC MODE: Only bots (2-5)
-            int numBots = 0;
-            while (numBots < 2 || numBots > 5) {
-                System.out.print("\nHow many bots? (2-5): ");
-                try {
-                    String input = s.nextLine().trim();
-                    numBots = Integer.parseInt(input);
-                    if (numBots < 2 || numBots > 5) {
-                        System.out.println("Invalid! Please enter a number between 2 and 5.");
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println("Invalid input! Please enter a number.");
-                }
+        for (int i = 1; i <= numPlayers; i++) {
+            System.out.println("\n--- Jogador " + i + " ---");
+
+            // Nome do jogador
+            System.out.print("Nome do jogador (padrão: Jogador " + i + "): ");
+            String playerName = s.nextLine().trim();
+            if (playerName.isEmpty()) {
+                playerName = "Jogador " + i;
             }
 
-            System.out.println("\nConfiguring bots...");
-
-            // Add bots with random entrances
-            String[] botNames = { "Bot Alpha", "Bot Beta", "Bot Gamma", "Bot Delta", "Bot Epsilon" };
-            for (int i = 0; i < numBots; i++) {
-                Room botStartRoom = (Room) entArray[0];
-                if (entArray.length > 1) {
-                    int randomIndex = (int) (Math.random() * entArray.length);
-                    botStartRoom = (Room) entArray[randomIndex];
-                }
-                game.addPlayer(botNames[i], true, botStartRoom);
-                System.out.println("✓ " + botNames[i] + " (Bot) added at " + botStartRoom.getId());
-            }
-
-            System.out.println("\n=== Starting Automatic Game ===");
-            System.out.println("Total players: " + numBots + " bots");
-            System.out.println("The game will run automatically. Watch the bots compete!");
-
-        } else {
-            // MANUAL MODE: 1 bot + 1-4 human players
-            int numHumanPlayers = 0;
-            while (numHumanPlayers < 1 || numHumanPlayers > 4) {
-                System.out.print("\nHow many human players? (1-4): ");
-                try {
-                    String input = s.nextLine().trim();
-                    numHumanPlayers = Integer.parseInt(input);
-                    if (numHumanPlayers < 1 || numHumanPlayers > 4) {
-                        System.out.println("Invalid! Please enter a number between 1 and 4.");
-                    }
-                } catch (NumberFormatException e) {
-                    System.out.println("Invalid input! Please enter a number.");
-                }
-            }
-
-            // ALWAYS add 1 bot first in manual mode
-            Room botStartRoom = (Room) entArray[0];
-            if (entArray.length > 1) {
-                int randomIndex = (int) (Math.random() * entArray.length);
-                botStartRoom = (Room) entArray[randomIndex];
-            }
-            game.addPlayer("Bot CPU", true, botStartRoom);
-            System.out.println("\n✓ Bot CPU (Bot) automatically added at " + botStartRoom.getId());
-
-            System.out.println("\nNow configure the human players:");
-
-            // Configure each HUMAN player
-            for (int i = 1; i <= numHumanPlayers; i++) {
-                System.out.println("\n--- Human Player " + i + " ---");
-
-                // Get player name
-                System.out.print("Enter player name (default: Player " + i + "): ");
-                String playerName = s.nextLine().trim();
-                if (playerName.isEmpty()) {
-                    playerName = "Player " + i;
-                }
-
-                // Choose starting entrance
-                Room startRoom = null;
-                if (entArray.length == 1) {
-                    startRoom = (Room) entArray[0];
-                    System.out.println("Starting at: " + startRoom.getId());
+            // Humano ou Bot
+            boolean isBot = false;
+            while (true) {
+                System.out.print("Humano ou Bot? (H/B): ");
+                String choice = s.nextLine().trim().toUpperCase();
+                if (choice.equals("H") || choice.equals("HUMANO")) {
+                    isBot = false;
+                    humanCount++;
+                    break;
+                } else if (choice.equals("B") || choice.equals("BOT")) {
+                    isBot = true;
+                    botCount++;
+                    break;
                 } else {
-                    System.out.println("\nSelect starting entrance for " + playerName + ":");
+                    System.out.println("Inválido! Por favor, insira H (Humano) ou B (Bot).");
+                }
+            }
+
+            // Escolher sala de entrada
+            Room startRoom = null;
+            if (entArray.length == 1) {
+                startRoom = (Room) entArray[0];
+                System.out.println("A começar em: " + startRoom.getId());
+            } else {
+                // Se for bot, escolher aleatoriamente
+                if (isBot) {
+                    int randomIndex = (int) (Math.random() * entArray.length);
+                    startRoom = (Room) entArray[randomIndex];
+                    System.out.println("A começar em: " + startRoom.getId() + " (aleatório)");
+                } else {
+                    // Se for humano, perguntar
+                    System.out.println("\nSelecione entrada inicial para " + playerName + ":");
                     for (int j = 0; j < entArray.length; j++) {
                         System.out.println((j + 1) + ". " + ((Room) entArray[j]).getId());
                     }
 
-                    int choice = -1;
+                    int entranceChoice = -1;
                     while (true) {
-                        System.out.print("Choice (1-" + entArray.length + "): ");
+                        System.out.print("Escolha (1-" + entArray.length + "): ");
                         try {
                             String input = s.nextLine().trim();
-                            choice = Integer.parseInt(input);
-                            if (choice >= 1 && choice <= entArray.length) {
-                                startRoom = (Room) entArray[choice - 1];
+                            entranceChoice = Integer.parseInt(input);
+                            if (entranceChoice >= 1 && entranceChoice <= entArray.length) {
+                                startRoom = (Room) entArray[entranceChoice - 1];
                                 break;
                             }
-                            System.out
-                                    .println("Invalid choice! Please enter a number between 1 and " + entArray.length);
+                            System.out.println(
+                                    "Escolha inválida! Por favor, insira um número entre 1 e " + entArray.length);
                         } catch (NumberFormatException e) {
-                            System.out.println("Invalid input! Please enter a number.");
+                            System.out.println("Entrada inválida! Por favor, insira um número.");
                         }
                     }
                 }
-
-                // Add human player to game (isBot = false)
-                game.addPlayer(playerName, false, startRoom);
-                System.out.println("✓ " + playerName + " (Human) added at " + startRoom.getId());
             }
 
-            System.out.println("\n=== Starting Manual Game ===");
-            System.out.println("Total players: " + (numHumanPlayers + 1) + " (1 bot + " + numHumanPlayers + " human)");
+            // Adicionar jogador ao jogo
+            game.addPlayer(playerName, isBot, startRoom);
+            System.out.println("✓ " + playerName + " (" + (isBot ? "Bot" : "Humano") + ") adicionado em "
+                    + startRoom.getId());
+        }
+
+        // Mensagem final
+        System.out.println("\n=== A Iniciar Jogo ===");
+        System.out.println("Total de jogadores: " + numPlayers);
+        if (humanCount > 0 && botCount > 0) {
+            System.out.println("(" + humanCount + " humano" + (humanCount > 1 ? "s" : "") + " + " + botCount + " bot"
+                    + (botCount > 1 ? "s" : "") + ")");
+        } else if (humanCount > 0) {
+            System.out.println("(Todos jogadores humanos)");
+        } else {
+            System.out.println("(Todos bots - observe a competição!)");
+            System.out.println("\n⚠️  MODO AUTOMÁTICO: Todos os jogadores são bots.");
+            System.out.println("    O jogo vai correr automaticamente sem interação humana.");
+            System.out.println("    Observe os bots a competir para encontrar o tesouro!\n");
         }
 
         game.start();

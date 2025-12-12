@@ -1,21 +1,17 @@
 package Collections.Pesquisas_Sorts.Classes;
 
-
-
-import java.util.ArrayList;
-
 public class LinkedSortingandSearching {
     public static <T extends Comparable<? super T>> boolean linearSearch(LinkedList<T> list, T target) {
         /*
-        boolean found = false;
-        LinkedList<T>.Node<T> temp = list.head;
-        while (temp!=null && !found){
-            if (temp.getElement().compareTo(target)==0){
-                found=true;
-            }
-            temp=temp.getNext();
-        }return found;
-    */
+         * boolean found = false;
+         * LinkedList<T>.Node<T> temp = list.head;
+         * while (temp!=null && !found){
+         * if (temp.getElement().compareTo(target)==0){
+         * found=true;
+         * }
+         * temp=temp.getNext();
+         * }return found;
+         */
         return list.contains(target);
     }
 
@@ -43,23 +39,23 @@ public class LinkedSortingandSearching {
         }
     }
 
-    public static <T extends Comparable<? super T>> void insertionSort (UnorderedLinkedList<T> data) {
-        if (data.head==null || data.head.next == null){
+    public static <T extends Comparable<? super T>> void insertionSort(UnorderedLinkedList<T> data) {
+        if (data.head == null || data.head.next == null) {
             System.out.println("Lista apenas tem um elemento ou esta vazia");
         }
-        LinkedList<T>.Node<T> sortList =null;
+        LinkedList<T>.Node<T> sortList = null;
         LinkedList<T>.Node<T> current = data.head;
 
-
-        while (current !=null){
+        while (current != null) {
             LinkedList<T>.Node<T> next = current.next;
-            sortList=sortedInsert(sortList, current);
+            sortList = sortedInsert(sortList, current);
             current = next;
         }
-        data.head=sortList;
-     }
+        data.head = sortList;
+    }
 
-    private static<T extends Comparable<? super T>> LinkedList<T>.Node<T> sortedInsert(LinkedList<T>.Node<T> sortedList, LinkedList<T>.Node<T> newNode) {
+    private static <T extends Comparable<? super T>> LinkedList<T>.Node<T> sortedInsert(
+            LinkedList<T>.Node<T> sortedList, LinkedList<T>.Node<T> newNode) {
         if (sortedList == null || sortedList.element.compareTo(newNode.element) >= 0) {
             newNode.next = sortedList;
             return newNode;
@@ -110,6 +106,7 @@ public class LinkedSortingandSearching {
     public static <T extends Comparable<? super T>> void quickSort(UnorderedLinkedList<T> data) {
         data.head = quickSortRec(data.head);
     }
+
     private static <T extends Comparable<? super T>> LinkedList<T>.Node<T> quickSortRec(LinkedList<T>.Node<T> head) {
         if (head == null || head.getNext() == null) {
             return head;
@@ -161,9 +158,11 @@ public class LinkedSortingandSearching {
 
         return head;
     }
+
     public static <T extends Comparable<? super T>> void mergeSort(UnorderedLinkedList<T> data) {
         data.head = mergeSortRec(data.head);
     }
+
     private static <T extends Comparable<? super T>> LinkedList<T>.Node<T> mergeSortRec(LinkedList<T>.Node<T> head) {
         if (head == null || head.getNext() == null) {
             return head;
@@ -179,6 +178,7 @@ public class LinkedSortingandSearching {
 
         return sortedList;
     }
+
     private static <T extends Comparable<? super T>> LinkedList<T>.Node<T> getMiddle(LinkedList<T>.Node<T> head) {
         if (head == null) {
             return head;
@@ -191,7 +191,9 @@ public class LinkedSortingandSearching {
         }
         return slow;
     }
-    private static <T extends Comparable<? super T>> LinkedList<T>.Node<T> merge(LinkedList<T>.Node<T> left, LinkedList<T>.Node<T> right) {
+
+    private static <T extends Comparable<? super T>> LinkedList<T>.Node<T> merge(LinkedList<T>.Node<T> left,
+            LinkedList<T>.Node<T> right) {
         LinkedList<T>.Node<T> result = null;
 
         if (left == null) {

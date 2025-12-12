@@ -1,14 +1,18 @@
 [
   {
-    "question": "What is 2+2?",
+    "question": "Qual é a soma de 2+2?",
     "answer": "4"
   },
   {
-    "question": "Capital of Portugal?",
-    "answer": "Lisbon"
+    "question": "Capital de Portugal?",
+    "answer": "Lisboa"
   },
   {
-    "question": "My age",
+    "question": "Minha idade?",
     "answer": "22"
+  },
+  {
+    "question": "Qual é a tua universidade?",
+    "answer": "ESTG"
   }
 ]

@@ -10,9 +10,7 @@ import Collections.Queue.LinkedQueue;
 import Collections.Stacks.ArrayStack;
 import Collections.Stacks.LinkedStack;
 
-import java.util.Arrays;
 import java.util.Iterator;
-
 
 public class NetworkBi<T> implements NetworkADT<T> {
     protected final int DEFAULT_CAPACITY = 10;
@@ -40,13 +38,11 @@ public class NetworkBi<T> implements NetworkADT<T> {
     }
 
     protected void expandCapacity() {
-        T[] largerVertices = (T[])(new Object[vertices.length*2]);
-        double[][] largerAdjMatrix = new double[vertices.length*2][vertices.length*2];
+        T[] largerVertices = (T[]) (new Object[vertices.length * 2]);
+        double[][] largerAdjMatrix = new double[vertices.length * 2][vertices.length * 2];
 
-        for (int i = 0; i < numVertices; i++)
-        {
-            for (int j = 0; j < numVertices; j++)
-            {
+        for (int i = 0; i < numVertices; i++) {
+            for (int j = 0; j < numVertices; j++) {
                 largerAdjMatrix[i][j] = adjMatrix[i][j];
             }
             largerVertices[i] = vertices[i];
@@ -68,13 +64,13 @@ public class NetworkBi<T> implements NetworkADT<T> {
         }
         numVertices++;
     }
-    public void addVertex () {
+
+    public void addVertex() {
         if (numVertices == vertices.length)
             expandCapacity();
 
         vertices[numVertices] = null;
-        for (int i = 0; i <= numVertices; i++)
-        {
+        for (int i = 0; i <= numVertices; i++) {
             adjMatrix[numVertices][i] = Double.POSITIVE_INFINITY;
             adjMatrix[i][numVertices] = Double.POSITIVE_INFINITY;
         }
@@ -82,31 +78,29 @@ public class NetworkBi<T> implements NetworkADT<T> {
     }
 
     @Override
-    public void removeVertex (T vertex){
-        for (int i = 0; i < numVertices; i++)
-        {
-            if (vertex.equals(vertices[i]))
-            {
+    public void removeVertex(T vertex) {
+        for (int i = 0; i < numVertices; i++) {
+            if (vertex.equals(vertices[i])) {
                 removeVertex(i);
                 return;
             }
         }
     }
-    public void removeVertex (int index) {
-        if (indexIsValid(index))
-        {
+
+    public void removeVertex(int index) {
+        if (indexIsValid(index)) {
             numVertices--;
 
             for (int i = index; i < numVertices; i++)
-                vertices[i] = vertices[i+1];
+                vertices[i] = vertices[i + 1];
 
             for (int i = index; i < numVertices; i++)
                 for (int j = 0; j <= numVertices; j++)
-                    adjMatrix[i][j] = adjMatrix[i+1][j];
+                    adjMatrix[i][j] = adjMatrix[i + 1][j];
 
             for (int i = index; i < numVertices; i++)
                 for (int j = 0; j < numVertices; j++)
-                    adjMatrix[j][i] = adjMatrix[j][i+1];
+                    adjMatrix[j][i] = adjMatrix[j][i + 1];
         }
     }
 
@@ -116,26 +110,24 @@ public class NetworkBi<T> implements NetworkADT<T> {
     }
 
     @Override
-    public void addEdge (T vertex1, T vertex2, double weight){
-        addEdge (getIndex(vertex1), getIndex(vertex2), weight);
+    public void addEdge(T vertex1, T vertex2, double weight) {
+        addEdge(getIndex(vertex1), getIndex(vertex2), weight);
     }
 
-    public void addEdge (int index1, int index2, double weight){
-        if (indexIsValid(index1) && indexIsValid(index2))
-        {
+    public void addEdge(int index1, int index2, double weight) {
+        if (indexIsValid(index1) && indexIsValid(index2)) {
             adjMatrix[index1][index2] = weight;
             adjMatrix[index2][index1] = weight;
         }
     }
 
     @Override
-    public void removeEdge (T vertex1, T vertex2){
-        removeEdge (getIndex(vertex1), getIndex(vertex2));
+    public void removeEdge(T vertex1, T vertex2) {
+        removeEdge(getIndex(vertex1), getIndex(vertex2));
     }
 
-    public void removeEdge (int index1, int index2){
-        if (indexIsValid(index1) && indexIsValid(index2))
-        {
+    public void removeEdge(int index1, int index2) {
+        if (indexIsValid(index1) && indexIsValid(index2)) {
             adjMatrix[index1][index2] = Double.POSITIVE_INFINITY;
             adjMatrix[index2][index1] = Double.POSITIVE_INFINITY;
         }
@@ -163,7 +155,6 @@ public class NetworkBi<T> implements NetworkADT<T> {
         while (!traversalQueue.isEmpty()) {
             x = traversalQueue.dequeue();
             resultList.addToRear(vertices[x]);
-
 
             for (int i = 0; i < numVertices; i++) {
                 if ((adjMatrix[x][i] < Double.POSITIVE_INFINITY) && !visited[i]) {
@@ -199,7 +190,6 @@ public class NetworkBi<T> implements NetworkADT<T> {
         while (!traversalStack.isEmpty()) {
             x = traversalStack.peek();
             found = false;
-
 
             for (int i = 0; (i < numVertices) && !found; i++) {
                 if ((adjMatrix[x][i] < Double.POSITIVE_INFINITY) && !visited[i]) {
@@ -261,9 +251,9 @@ public class NetworkBi<T> implements NetworkADT<T> {
         visited[startIndex] = true;
         weight = 0;
 
-        //Update the pathWeight for each vertex except the startVertex. Notice
-        //that all vertices not adjacent to the startVertex will have a
-        //pathWeight of infinity for now
+        // Update the pathWeight for each vertex except the startVertex. Notice
+        // that all vertices not adjacent to the startVertex will have a
+        // pathWeight of infinity for now
         for (int i = 0; i < numVertices; i++) {
             if (!visited[i]) {
                 pathWeight[i] = pathWeight[startIndex] + adjMatrix[startIndex][i];
@@ -283,9 +273,9 @@ public class NetworkBi<T> implements NetworkADT<T> {
                 visited[index] = true;
             }
 
-            //Update the pathWeight for each vertex that has not been
-            //visited and is adjacent to the last vertex that was visited.
-            //Also, add each unvisited vertex to the heap
+            // Update the pathWeight for each vertex that has not been
+            // visited and is adjacent to the last vertex that was visited.
+            // Also, add each unvisited vertex to the heap
             for (int i = 0; i < numVertices; i++) {
                 if (!visited[i]) {
                     if ((adjMatrix[index][i] < Double.POSITIVE_INFINITY)
@@ -311,6 +301,7 @@ public class NetworkBi<T> implements NetworkADT<T> {
 
         return resultList.iterator();
     }
+
     protected int getIndexOfAdjVertexWithWeightOf(boolean[] visited, double[] pathWeight, double weight) {
         for (int i = 0; i < numVertices; i++) {
             if ((pathWeight[i] == weight) && !visited[i]) {
@@ -322,7 +313,7 @@ public class NetworkBi<T> implements NetworkADT<T> {
             }
         }
 
-        return -1;  // should never get to here
+        return -1; // should never get to here
     }
 
     @Override // Dijkstra's algorithm
@@ -334,7 +325,8 @@ public class NetworkBi<T> implements NetworkADT<T> {
             return Double.POSITIVE_INFINITY; // Return infinity if vertices are invalid
         }
 
-        // Initialize distances to infinity and set the distance of the start vertex to 0
+        // Initialize distances to infinity and set the distance of the start vertex to
+        // 0
         double[] distances = new double[numVertices];
         for (int i = 0; i < numVertices; i++) {
             distances[i] = Double.POSITIVE_INFINITY;
@@ -377,7 +369,7 @@ public class NetworkBi<T> implements NetworkADT<T> {
 
     @Override
     public boolean isEmpty() {
-        return numVertices==0;
+        return numVertices == 0;
     }
 
     @Override
@@ -401,69 +393,62 @@ public class NetworkBi<T> implements NetworkADT<T> {
 
     @Override
     public String toString() {
-            if (numVertices == 0)
-                return "Graph is empty";
+        if (numVertices == 0)
+            return "Graph is empty";
 
-            String result = new String("");
+        String result = new String("");
 
-            /** Print the adjacency Matrix */
-            result += "Adjacency Matrix\n";
-            result += "----------------\n";
-            result += "index\t";
+        /** Print the adjacency Matrix */
+        result += "Adjacency Matrix\n";
+        result += "----------------\n";
+        result += "index\t";
 
-            for (int i = 0; i < numVertices; i++)
-            {
-                result += "" + i;
-                if (i < 10)
-                    result += " ";
-            }
-            result += "\n\n";
-
-            for (int i = 0; i < numVertices; i++)
-            {
-                result += "" + i + "\t";
-
-                for (int j = 0; j < numVertices; j++)
-                {
-                    if (adjMatrix[i][j] < Double.POSITIVE_INFINITY)
-                        result += "1 ";
-                    else
-                        result += "0 ";
-                }
-                result += "\n";
-            }
-
-            /** Print the vertex values */
-            result += "\n\nVertex Values";
-            result += "\n-------------\n";
-            result += "index\tvalue\n\n";
-
-            for (int i = 0; i < numVertices; i++)
-            {
-                result += "" + i + "\t";
-                result += vertices[i].toString() + "\n";
-            }
-
-            /** Print the weights of the edges */
-            result += "\n\nWeights of Edges";
-            result += "\n----------------\n";
-            result += "index\tweight\n\n";
-
-            for (int i = 0; i < numVertices; i++)
-            {
-                for (int j = numVertices-1; j > i; j--)
-                {
-                    if (adjMatrix[i][j] < Double.POSITIVE_INFINITY)
-                    {
-                        result += i + " to " + j + "\t";
-                        result += adjMatrix[i][j] + "\n";
-                    }
-                }
-            }
-
-            result += "\n";
-            return result;
+        for (int i = 0; i < numVertices; i++) {
+            result += "" + i;
+            if (i < 10)
+                result += " ";
         }
+        result += "\n\n";
+
+        for (int i = 0; i < numVertices; i++) {
+            result += "" + i + "\t";
+
+            for (int j = 0; j < numVertices; j++) {
+                if (adjMatrix[i][j] < Double.POSITIVE_INFINITY)
+                    result += "1 ";
+                else
+                    result += "0 ";
+            }
+            result += "\n";
+        }
+
+        /** Print the vertex values */
+        result += "\n\nVertex Values";
+        result += "\n-------------\n";
+        result += "index\tvalue\n\n";
+
+        for (int i = 0; i < numVertices; i++) {
+            result += "" + i + "\t";
+            result += vertices[i].toString() + "\n";
+        }
+
+        /** Print the weights of the edges */
+        result += "\n\nWeights of Edges";
+        result += "\n----------------\n";
+        result += "index\tweight\n\n";
+
+        for (int i = 0; i < numVertices; i++) {
+            for (int j = numVertices - 1; j > i; j--) {
+                if (adjMatrix[i][j] < Double.POSITIVE_INFINITY) {
+                    result += i + " to " + j + "\t";
+                    result += adjMatrix[i][j] + "\n";
+                }
+            }
+        }
+
+        result += "\n";
+        return result;
+    }
 
     public NetworkBi<T> mstNetwork() {
         int x, y;
@@ -532,8 +517,7 @@ public class NetworkBi<T> implements NetworkADT<T> {
              * the heap
              */
             for (int i = 0; i < numVertices; i++) {
-                if (!visited[i] && (this.adjMatrix[i][index]
-                        < Double.POSITIVE_INFINITY)) {
+                if (!visited[i] && (this.adjMatrix[i][index] < Double.POSITIVE_INFINITY)) {
                     edge[0] = index;
                     edge[1] = i;
                     minHeap.addElement(adjMatrix[index][i]);
@@ -542,6 +526,7 @@ public class NetworkBi<T> implements NetworkADT<T> {
         }
         return resultGraph;
     }
+
     protected int[] getEdgeWithWeightOf(double weight, boolean[] visited) {
         int[] edge = new int[2];
         for (int i = 0; i < numVertices; i++) {
@@ -562,14 +547,4 @@ public class NetworkBi<T> implements NetworkADT<T> {
         return edge;
     }
 
-
-    }
-
-
-
-
-
-
-
-
-
+}

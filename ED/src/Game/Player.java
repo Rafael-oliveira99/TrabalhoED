@@ -1,7 +1,6 @@
 package Game;
 
 import Collections.ListasIterador.Classes.LinkedUnorderedList;
-import java.awt.Color; // Para a cor do jogador na GUI
 
 // Classe que representa um jogador (humano ou bot)
 public class Player implements Comparable<Player> {
@@ -12,21 +11,20 @@ public class Player implements Comparable<Player> {
     private boolean hasInteracted; // flag para saber se já interagiu na sala atual
     private int skipTurns; // turnos que tem de saltar (quando fica atordoado)
     private LinkedUnorderedList<String> historyLog;
-
-    // cor do jogador para aparecer no mapa visual
-    private Color color;
+    private LinkedUnorderedList<String> roomsVisited; // Lista de IDs de salas visitadas
 
     // Construtor
-    public Player(String name, boolean isBot, Room startRoom, Color color) {
+    public Player(String name, boolean isBot, Room startRoom) {
         this.name = name;
         this.isBot = isBot;
         this.currentRoom = startRoom;
         this.previousRoom = null;
         this.historyLog = new LinkedUnorderedList<>();
+        this.roomsVisited = new LinkedUnorderedList<>();
         this.hasInteracted = false;
         this.skipTurns = 0;
-        this.color = color;
         addToLog("Started game at " + startRoom.getId());
+        roomsVisited.addToRear(startRoom.getId()); // Adicionar sala inicial
     }
 
     // getters e setters básicos
@@ -62,16 +60,28 @@ public class Player implements Comparable<Player> {
         this.skipTurns = turns;
     }
 
-    // getter para a cor
-    public Color getColor() {
-        return color;
-    }
-
     // muda a sala do jogador e guarda a anterior
     public void setCurrentRoom(Room room) {
         this.previousRoom = this.currentRoom;
         this.currentRoom = room;
         addToLog("Moved to " + room.getId());
+
+        // Adicionar à lista de salas visitadas se ainda não visitou
+        boolean alreadyVisited = false;
+        for (String visitedRoomId : roomsVisited) {
+            if (visitedRoomId.equals(room.getId())) {
+                alreadyVisited = true;
+                break;
+            }
+        }
+        if (!alreadyVisited) {
+            roomsVisited.addToRear(room.getId());
+        }
+    }
+
+    // Retorna quantas salas DIFERENTES o jogador já visitou
+    public int getRoomsVisitedCount() {
+        return roomsVisited.size();
     }
 
     // adiciona evento ao histórico do jogador
