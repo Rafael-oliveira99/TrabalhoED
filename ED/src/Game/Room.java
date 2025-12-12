@@ -1,23 +1,35 @@
 package Game;
 
-// Representa uma sala do labirinto
+/**
+ * Representa uma sala do labirinto.
+ * Cada sala tem um identificador, tipo (ENTRANCE, TREASURE, NORMAL),
+ * interação (none, enigma, lever) e coordenadas para visualização.
+ * 
+ * @author Rafael Oliveira e Francisco Gomes (Grupo 26)
+ * @version 1.0
+ */
 public class Room implements Comparable<Room> {
-    private String id; // nome da sala
-    private String type; // ENTRANCE, TREASURE, NORMAL
-    private String interaction; // none, enigma, lever
-    private boolean hasLever;
-
-    // coordenadas no mapa visual
+    private String id;
+    private String type;
+    private String interaction;
     private int x;
     private int y;
 
+    /**
+     * Construtor da sala.
+     * 
+     * @param id          Identificador único da sala
+     * @param type        Tipo da sala (ENTRANCE, TREASURE, NORMAL)
+     * @param interaction Tipo de interação (none, enigma, lever)
+     * @param x           Coordenada X para visualização
+     * @param y           Coordenada Y para visualização
+     */
     public Room(String id, String type, String interaction, int x, int y) {
         this.id = id;
         this.type = type;
         this.interaction = interaction;
         this.x = x;
         this.y = y;
-        this.hasLever = false;
     }
 
     public String getId() {
@@ -44,15 +56,6 @@ public class Room implements Comparable<Room> {
         this.interaction = interaction;
     }
 
-    public boolean hasLever() {
-        return hasLever;
-    }
-
-    public void setHasLever(boolean hasLever) {
-        this.hasLever = hasLever;
-    }
-
-    // getters e setters das coordenadas
     public int getX() {
         return x;
     }
@@ -78,11 +81,10 @@ public class Room implements Comparable<Room> {
     public boolean equals(Object o) {
         if (this == o)
             return true;
-        if (o == null || getClass() != o.getClass())
+        if (!(o instanceof Room))
             return false;
         Room room = (Room) o;
-        // Comparação manual sem Objects.equals
-        return (id == null ? room.id == null : id.equals(room.id));
+        return id != null ? id.equals(room.id) : room.id == null;
     }
 
     @Override

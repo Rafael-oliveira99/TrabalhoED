@@ -5,6 +5,13 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
+/**
+ * Carrega dados de ficheiros JSON para o jogo.
+ * Responsável por ler mapas e enigmas de ficheiros externos.
+ * 
+ * @author Rafael Oliveira e Francisco Gomes (Grupo 26)
+ * @version 1.0
+ */
 public class DataLoader {
 
     public static void loadMap(String filePath, MazeMap mazeMap) {
@@ -15,10 +22,9 @@ public class DataLoader {
             return;
         }
 
-        // --- 1. Analisar Salas (Parsing Manual) ---
+        // Analisar Salas
         String roomsBlock = extractBlock(jsonContent, "\"rooms\"");
         if (roomsBlock != null) {
-            // Parsing manual sem regex
             int pos = 0;
             while (pos < roomsBlock.length()) {
                 int openBrace = roomsBlock.indexOf("{", pos);
@@ -31,7 +37,6 @@ public class DataLoader {
 
                 String roomObj = roomsBlock.substring(openBrace, closeBrace + 1);
 
-                // Extrair valores usando funções auxiliares
                 String id = extractJsonValue(roomObj, "room");
                 String type = extractJsonValue(roomObj, "type");
                 String interaction = extractJsonValue(roomObj, "interaction");
@@ -39,20 +44,16 @@ public class DataLoader {
                 String yStr = extractJsonValue(roomObj, "y");
 
                 if (!id.isEmpty() && !xStr.isEmpty() && !yStr.isEmpty()) {
-                    int x = Integer.parseInt(xStr);
-                    int y = Integer.parseInt(yStr);
-                    Room newRoom = new Room(id, type, interaction, x, y);
-                    mazeMap.addRoom(newRoom);
+                    mazeMap.addRoom(new Room(id, type, interaction, Integer.parseInt(xStr), Integer.parseInt(yStr)));
                 }
 
                 pos = closeBrace + 1;
             }
         }
 
-        // --- 2. Analisar Conexões (Parsing Manual) ---
+        // Analisar Conexões
         String connectionsBlock = extractBlock(jsonContent, "\"connections\"");
         if (connectionsBlock != null) {
-            // Parsing manual sem regex
             int pos = 0;
             while (pos < connectionsBlock.length()) {
                 int openBrace = connectionsBlock.indexOf("{", pos);
@@ -70,12 +71,11 @@ public class DataLoader {
                 String costStr = extractJsonValue(connObj, "cost");
 
                 if (!from.isEmpty() && !to.isEmpty() && !costStr.isEmpty()) {
-                    double cost = Double.parseDouble(costStr);
-                    Room r1 = findRoom(mazeMap, from);
-                    Room r2 = findRoom(mazeMap, to);
+                    Room r1 = mazeMap.getRoom(from);
+                    Room r2 = mazeMap.getRoom(to);
 
                     if (r1 != null && r2 != null) {
-                        mazeMap.addCorridor(r1, r2, cost);
+                        mazeMap.addCorridor(r1, r2, Double.parseDouble(costStr));
                     }
                 }
 
@@ -84,14 +84,10 @@ public class DataLoader {
         }
     }
 
-    // ... (loadEnigmas, readFile, extractBlock, findRoom métodos permanecem
-    // exatamente iguais) ...
-
     public static ArrayUnorderedList<Enigma> loadEnigmas(String filePath) {
         ArrayUnorderedList<Enigma> list = new ArrayUnorderedList<>();
         String jsonContent = readFile(filePath);
 
-        // Parsing manual sem regex
         int pos = 0;
         while (pos < jsonContent.length()) {
             int openBrace = jsonContent.indexOf("{", pos);
@@ -103,7 +99,6 @@ public class DataLoader {
                 break;
 
             String enigmaObj = jsonContent.substring(openBrace, closeBrace + 1);
-
             String question = extractJsonValue(enigmaObj, "question");
             String answer = extractJsonValue(enigmaObj, "answer");
 
@@ -129,7 +124,6 @@ public class DataLoader {
         return content.toString();
     }
 
-    // Extrator simples de valores JSON (usado para parsing manual)
     private static String extractJsonValue(String json, String key) {
         int keyIndex = json.indexOf("\"" + key + "\":");
         if (keyIndex == -1)
@@ -143,7 +137,7 @@ public class DataLoader {
             valueEnd = json.length();
 
         String value = json.substring(valueStart, valueEnd).trim();
-        // Remove aspas se presentes
+
         if (value.startsWith("\"") && value.endsWith("\"")) {
             value = value.substring(1, value.length() - 1);
         }
@@ -159,9 +153,5 @@ public class DataLoader {
         if (startBracket != -1 && endBracket != -1)
             return content.substring(startBracket, endBracket + 1);
         return null;
-    }
-
-    private static Room findRoom(MazeMap map, String id) {
-        return map.getRoom(id);
     }
 }

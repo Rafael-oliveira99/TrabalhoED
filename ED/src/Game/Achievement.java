@@ -1,18 +1,20 @@
 package Game;
 
 /**
- * Representa uma conquista que pode ser desbloqueada durante o jogo
+ * Representa uma conquista do jogo.
+ * Cada conquista tem um nome, descrição e estado de desbloqueio.
+ * 
+ * @author Rafael Oliveira e Francisco Gomes (Grupo 26)
+ * @version 1.0
  */
 public class Achievement {
     private String name;
     private String description;
-    private String icon;
     private boolean unlocked;
 
-    public Achievement(String name, String description, String icon) {
+    public Achievement(String name, String description) {
         this.name = name;
         this.description = description;
-        this.icon = icon;
         this.unlocked = false;
     }
 
@@ -30,15 +32,5 @@ public class Achievement {
 
     public String getDescription() {
         return description;
-    }
-
-    public String getIcon() {
-        return icon;
-    }
-
-    @Override
-    public String toString() {
-        String status = unlocked ? "Desbloqueada" : "Bloqueada";
-        return icon + " " + name + " - " + description + " [" + status + "]";
     }
 }

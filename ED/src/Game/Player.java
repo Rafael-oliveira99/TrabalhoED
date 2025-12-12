@@ -2,18 +2,31 @@ package Game;
 
 import Collections.ListasIterador.Classes.LinkedUnorderedList;
 
-// Classe que representa um jogador (humano ou bot)
+/**
+ * Representa um jogador no jogo (humano ou bot).
+ * Mantém estado do jogador incluindo posição atual, histórico de ações,
+ * salas visitadas e status de atordoamento.
+ * 
+ * @author Rafael Oliveira e Francisco Gomes (Grupo 26)
+ * @version 1.0
+ */
 public class Player implements Comparable<Player> {
     private String name;
-    private Room currentRoom; // sala atual
-    private Room previousRoom; // sala anterior (para eventos de recuar)
+    private Room currentRoom;
+    private Room previousRoom;
     private boolean isBot;
-    private boolean hasInteracted; // flag para saber se já interagiu na sala atual
-    private int skipTurns; // turnos que tem de saltar (quando fica atordoado)
+    private boolean hasInteracted;
+    private int skipTurns;
     private LinkedUnorderedList<String> historyLog;
-    private LinkedUnorderedList<String> roomsVisited; // Lista de IDs de salas visitadas
+    private LinkedUnorderedList<String> roomsVisited;
 
-    // Construtor
+    /**
+     * Construtor do jogador.
+     * 
+     * @param name      Nome do jogador
+     * @param isBot     Verdadeiro se for bot, falso se for humano
+     * @param startRoom Sala inicial do jogador
+     */
     public Player(String name, boolean isBot, Room startRoom) {
         this.name = name;
         this.isBot = isBot;
@@ -24,10 +37,9 @@ public class Player implements Comparable<Player> {
         this.hasInteracted = false;
         this.skipTurns = 0;
         addToLog("Started game at " + startRoom.getId());
-        roomsVisited.addToRear(startRoom.getId()); // Adicionar sala inicial
+        roomsVisited.addToRear(startRoom.getId());
     }
 
-    // getters e setters básicos
     public String getName() {
         return name;
     }
@@ -60,31 +72,39 @@ public class Player implements Comparable<Player> {
         this.skipTurns = turns;
     }
 
-    // muda a sala do jogador e guarda a anterior
     public void setCurrentRoom(Room room) {
         this.previousRoom = this.currentRoom;
         this.currentRoom = room;
         addToLog("Moved to " + room.getId());
 
-        // Adicionar à lista de salas visitadas se ainda não visitou
-        boolean alreadyVisited = false;
-        for (String visitedRoomId : roomsVisited) {
-            if (visitedRoomId.equals(room.getId())) {
-                alreadyVisited = true;
-                break;
-            }
-        }
-        if (!alreadyVisited) {
+        if (!hasVisited(room.getId())) {
             roomsVisited.addToRear(room.getId());
         }
     }
 
-    // Retorna quantas salas DIFERENTES o jogador já visitou
+    public void setCurrentRoomAfterSwap(Room room) {
+        this.currentRoom = room;
+        this.previousRoom = room;
+        addToLog("Swapped to " + room.getId());
+
+        if (!hasVisited(room.getId())) {
+            roomsVisited.addToRear(room.getId());
+        }
+    }
+
+    private boolean hasVisited(String roomId) {
+        for (String visitedRoomId : roomsVisited) {
+            if (visitedRoomId.equals(roomId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public int getRoomsVisitedCount() {
         return roomsVisited.size();
     }
 
-    // adiciona evento ao histórico do jogador
     public void addToLog(String event) {
         historyLog.addToRear(event);
     }

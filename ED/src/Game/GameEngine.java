@@ -9,11 +9,12 @@ import java.util.Iterator;
 import java.util.Scanner;
 
 /**
- * Manages the core game logic, including the game loop, turn management,
- * player movement, and rule enforcement for "Labirinto da Glória".
- *
- * @author Rafael Oliveira
- * @version 1.3
+ * Motor principal do jogo "Labirinto da Glória".
+ * Gerencia toda a lógica do jogo incluindo turnos, movimento de jogadores,
+ * eventos aleatórios, enigmas, alavancas e condições de vitória.
+ * 
+ * @author Rafael Oliveira e Francisco Gomes (Grupo 26)
+ * @version 1.0
  */
 public class GameEngine {
 
@@ -23,10 +24,13 @@ public class GameEngine {
     private Room treasureRoom;
     private boolean gameRunning;
     private ArrayUnorderedList<Enigma> availableEnigmas;
-    private AchievementTracker achievementTracker; // Rastreador de conquistas
-
+    private AchievementTracker achievementTracker;
     private Scanner consoleScanner;
 
+    /**
+     * Construtor do motor do jogo.
+     * Inicializa todas as estruturas de dados necessárias.
+     */
     public GameEngine() {
         this.map = new MazeMap();
         this.turnQueue = new LinkedQueue<>();
@@ -41,17 +45,13 @@ public class GameEngine {
 
     public void stopGame() {
         this.gameRunning = false;
-        printMsg("Jogo parado. A gerar relatório...");
-    }
-
-    private void printMsg(String msg) {
-        System.out.println(msg);
+        System.out.println("Jogo parado. A gerar relatório...");
     }
 
     private void movePlayerWithAnimation(Player p, Room target) {
         p.setCurrentRoom(target);
         try {
-            Thread.sleep(500); // Pequena pausa para melhor legibilidade
+            Thread.sleep(500);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -60,6 +60,7 @@ public class GameEngine {
     public void loadMapData(String mapFile) {
         DataLoader.loadMap(mapFile, map);
         this.treasureRoom = map.getRoom("Tesouro");
+
         if (this.treasureRoom == null) {
             Iterator<Room> it = map.getRooms();
             while (it.hasNext()) {
@@ -70,13 +71,13 @@ public class GameEngine {
                 }
             }
         }
-        // Try to find enigmas.json in common locations
+
         String[] possiblePaths = {
                 "src/Map/enigmas.json",
                 "Map/enigmas.json",
                 "enigmas.json",
-                "ED/src/Map/enigmas.json", // If running from parent dir
-                "../src/Map/enigmas.json" // If running from bin/out
+                "ED/src/Map/enigmas.json",
+                "../src/Map/enigmas.json"
         };
         String enigmaPath = null;
 
@@ -108,48 +109,29 @@ public class GameEngine {
     }
 
     public void start() {
-        printMsg("--- A Iniciar Labirinto da Glória ---");
+        System.out.println("--- A Iniciar O Labirinto da Glória ---");
 
-        // Inicializar rastreador de conquistas para o primeiro jogador humano
         Player trackedPlayer = null;
         Iterator<Player> it = allPlayers.iterator();
-        while (it.hasNext()) {
-            Player p = it.next();
-            if (!p.isBot()) {
-                trackedPlayer = p;
-                break;
-            }
+        if (it.hasNext()) {
+            trackedPlayer = it.next();
         }
 
-        // Se houver jogador humano, rastrear conquistas
         if (trackedPlayer != null) {
-            int totalRooms = 0;
-            Iterator<Room> roomIt = map.getRooms();
-            while (roomIt.hasNext()) {
-                roomIt.next();
-                totalRooms++;
-            }
-            achievementTracker = new AchievementTracker(trackedPlayer, totalRooms);
+            achievementTracker = new AchievementTracker(trackedPlayer);
         }
 
         while (gameRunning && !turnQueue.isEmpty()) {
             Player current = turnQueue.dequeue();
 
-            // Check for Stun
             if (current.getSkipTurns() > 0) {
-                printMsg("\n>> Turno: " + current.getName() + " está atordoado! (Salta turno)");
+                System.out.println("\n>> Turno: " + current.getName() + " está atordoado! (Salta turno)");
                 current.addToLog("Skipped turn due to stun.");
                 current.setSkipTurns(current.getSkipTurns() - 1);
                 turnQueue.enqueue(current);
-
-                // Rastrear atordoamento
-                if (achievementTracker != null && !current.isBot()) {
-                    achievementTracker.recordStun();
-                }
-
                 try {
                     Thread.sleep(1500);
-                } catch (Exception e) {
+                } catch (InterruptedException e) {
                 }
                 continue;
             }
@@ -157,13 +139,8 @@ public class GameEngine {
             if (!gameRunning)
                 break;
 
-            printMsg("\n>> Turno: " + current.getName() + " (" + (current.isBot() ? "Bot" : "Humano") + ")");
-            printMsg("Localização atual: " + current.getCurrentRoom());
-
-            // Incrementar contador de turnos
-            if (achievementTracker != null && !current.isBot()) {
-                achievementTracker.incrementTurn();
-            }
+            System.out.println("\n>> Turno: " + current.getName() + " (" + (current.isBot() ? "Bot" : "Humano") + ")");
+            System.out.println("Localização atual: " + current.getCurrentRoom());
 
             if (current.isBot()) {
                 playBotTurn(current);
@@ -171,9 +148,8 @@ public class GameEngine {
                 playHumanTurn(current);
             }
 
-            // Check Win Condition
             if (current.getCurrentRoom() != null && current.getCurrentRoom().getType().equals("TREASURE")) {
-                printMsg("!!! TEMOS UM VENCEDOR: " + current.getName() + " !!!");
+                System.out.println("!!! VENCEDOR: " + current.getName() + " !!!");
                 current.addToLog("Found the treasure and won!");
                 gameRunning = false;
             } else {
@@ -181,9 +157,9 @@ public class GameEngine {
             }
         }
 
-        generateJSONReport();
+        exportReport();
+        System.out.println("Relatório gerado: report.json");
 
-        // Mostrar conquistas se houver rastreador
         if (achievementTracker != null) {
             achievementTracker.checkAndUnlockAchievements();
             achievementTracker.displayAchievementsReport();
@@ -191,7 +167,6 @@ public class GameEngine {
     }
 
     private void playBotTurn(Player bot) {
-        // Verificar se há um enigma na sala atual antes de mover
         if (!bot.hasInteracted() && bot.getCurrentRoom().getInteraction().equals("enigma")) {
             solveBotEnigma(bot);
             bot.setHasInteracted(true);
@@ -200,7 +175,7 @@ public class GameEngine {
         Iterator<Room> path = map.getShortestPath(bot.getCurrentRoom(), treasureRoom);
         try {
             Thread.sleep(1000);
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
         }
 
         if (path.hasNext()) {
@@ -210,24 +185,23 @@ public class GameEngine {
                 double weight = map.getWeight(bot.getCurrentRoom(), nextMove);
 
                 if (weight > 100) {
-                    printMsg("Bot está bloqueado por uma porta trancada em " + nextMove.getId());
+                    System.out.println("O Bot está bloqueado por uma porta trancada em " + nextMove.getId());
                     if (bot.getCurrentRoom().getInteraction().equals("lever")) {
                         pullLever(bot);
                     } else {
-                        printMsg("Bot espera.");
+                        System.out.println("O Bot espera.");
                     }
                 } else {
-                    printMsg("Bot a mover para: " + nextMove.getId());
+                    System.out.println("O Bot move-se para: " + nextMove.getId());
                     movePlayerWithAnimation(bot, nextMove);
                     bot.setHasInteracted(false);
 
-                    // FIX 1: Only trigger event if NOT in treasure room
                     if (!nextMove.getType().equals("TREASURE")) {
                         triggerRandomEvent(bot);
                     }
                 }
             } else {
-                printMsg("Bot está confuso.");
+                System.out.println("O Bot está confuso.");
             }
         }
     }
@@ -244,21 +218,19 @@ public class GameEngine {
             player.setHasInteracted(true);
         }
 
-        printMsg("Vizinhos:");
+        System.out.println("Vizinhos:");
         Iterator<Room> rooms = map.getRooms();
         while (rooms.hasNext()) {
             Room r = rooms.next();
             if (map.isNeighbor(current, r)) {
                 double weight = map.getWeight(current, r);
                 String status = (weight > 100) ? "[TRANCADA]" : "[ABERTA]";
-                printMsg(" - " + r.getId() + " " + status);
+                System.out.println(" - " + r.getId() + " " + status);
             }
         }
 
-        String targetName = null;
-        System.out.println("Digite nome da sala para mover:");
-        if (consoleScanner.hasNextLine())
-            targetName = consoleScanner.nextLine();
+        System.out.println("Digita o nome da sala para ires:");
+        String targetName = consoleScanner.hasNextLine() ? consoleScanner.nextLine() : null;
 
         if (targetName == null || targetName.trim().isEmpty())
             return;
@@ -266,12 +238,12 @@ public class GameEngine {
         Room target = map.getRoom(targetName);
 
         if (target == null) {
-            printMsg("Sala não encontrada!");
+            System.out.println("Sala não encontrada!");
             return;
         }
 
         if (!map.isNeighbor(current, target)) {
-            printMsg("Não podes mover diretamente para lá!");
+            System.out.println("Não podes mover-te diretamente para lá!");
             return;
         }
 
@@ -280,113 +252,106 @@ public class GameEngine {
             movePlayerWithAnimation(player, target);
             player.setHasInteracted(false);
 
-            // FIX 1: Don't trigger events if we just won!
             if (!target.getType().equals("TREASURE")) {
                 triggerRandomEvent(player);
             }
         } else {
-            printMsg("Caminho bloqueado! Encontra uma alavanca.");
+            System.out.println("Caminho bloqueado! Encontra uma alavanca.");
         }
     }
 
-    private void solveEnigma(Player p) {
+    private Enigma getRandomEnigma() {
         if (availableEnigmas == null || availableEnigmas.isEmpty()) {
             this.availableEnigmas = DataLoader.loadEnigmas("src/Map/enigmas.json");
         }
         if (availableEnigmas.isEmpty())
-            return;
+            return null;
 
-        // FIX 2: Random Enigma Logic
         int randomIndex = (int) (Math.random() * availableEnigmas.size());
-
-        // Iterate to find the Nth enigma
         Iterator<Enigma> it = availableEnigmas.iterator();
         Enigma e = null;
         for (int i = 0; i <= randomIndex; i++) {
             e = it.next();
         }
-        // Remove it to prevent repetition
         availableEnigmas.remove(e);
+        return e;
+    }
 
-        printMsg("Enigma: " + e.getQuestion());
+    private void solveEnigma(Player p) {
+        Enigma e = getRandomEnigma();
+        if (e == null)
+            return;
 
-        String input = "";
+        System.out.println("Enigma: " + e.getQuestion());
         System.out.print("Resposta: ");
-        if (consoleScanner.hasNext())
-            input = consoleScanner.next();
-        consoleScanner.nextLine(); // consume newline
+
+        String input = consoleScanner.hasNext() ? consoleScanner.next() : "";
+        consoleScanner.nextLine();
 
         if (e.checkAnswer(input)) {
-            printMsg("Correto!");
+            System.out.println("Correto!");
             p.addToLog("Solved enigma: " + e.getQuestion());
-
-            // Rastrear enigma resolvido
-            if (achievementTracker != null && !p.isBot()) {
+            if (achievementTracker != null && p.equals(achievementTracker.getTrackedPlayer())) {
                 achievementTracker.recordEnigmaSolved();
             }
         } else {
-            printMsg("Errado!");
+            System.out.println("Errado!");
             p.addToLog("Failed enigma.");
-
-            // Rastrear enigma falhado
-            if (achievementTracker != null && !p.isBot()) {
+            if (achievementTracker != null && p.equals(achievementTracker.getTrackedPlayer())) {
                 achievementTracker.recordEnigmaFailed();
             }
         }
     }
 
     private void solveBotEnigma(Player bot) {
-        if (availableEnigmas == null || availableEnigmas.isEmpty()) {
-            this.availableEnigmas = DataLoader.loadEnigmas("src/Map/enigmas.json");
-        }
-        if (availableEnigmas.isEmpty())
+        Enigma e = getRandomEnigma();
+        if (e == null)
             return;
 
-        // Selecionar um enigma aleatório
-        int randomIndex = (int) (Math.random() * availableEnigmas.size());
+        System.out.println("Bot encontrou um enigma: " + e.getQuestion());
 
-        Iterator<Enigma> it = availableEnigmas.iterator();
-        Enigma e = null;
-        for (int i = 0; i <= randomIndex; i++) {
-            e = it.next();
-        }
-        // Remover para evitar repetição
-        availableEnigmas.remove(e);
-
-        printMsg("Bot encontrou um enigma: " + e.getQuestion());
-
-        // 33% de probabilidade de acertar
-        double chance = Math.random();
-        if (chance < 0.33) {
-            printMsg("Bot resolveu o enigma corretamente! ✓");
+        if (Math.random() < 0.33) {
+            System.out.println("Bot resolveu o enigma corretamente!");
             bot.addToLog("Solved enigma: " + e.getQuestion());
         } else {
-            printMsg("Bot falhou o enigma. ✗");
+            System.out.println("Bot falhou o enigma.");
             bot.addToLog("Failed enigma.");
         }
     }
 
     private void pullLever(Player p) {
-        printMsg("Encontraste uma alavanca! Puxaste-a.");
-        p.addToLog("Pulled a lever.");
+        System.out.println("Encontraste uma alavanca! A tentar ativá-la...");
+        p.addToLog("Tried to pull lever.");
 
-        Iterator<Room> neighbors = map.getNeighbors(p.getCurrentRoom());
-        boolean unlockedAny = false;
-        while (neighbors.hasNext()) {
-            Room r = neighbors.next();
-            if (map.getWeight(p.getCurrentRoom(), r) > 100) {
-                map.openPassage(p.getCurrentRoom(), r);
-                unlockedAny = true;
+        boolean success = Math.random() < 0.5;
+
+        if (success) {
+            System.out.println("*CLICK* Conseguiste! A alavanca funcionou e as portas próximas destrancaram!");
+            p.addToLog("Lever worked - doors unlocked.");
+
+            Iterator<Room> neighbors = map.getNeighbors(p.getCurrentRoom());
+            boolean unlockedAny = false;
+            while (neighbors.hasNext()) {
+                Room r = neighbors.next();
+                if (map.getWeight(p.getCurrentRoom(), r) > 100) {
+                    map.openPassage(p.getCurrentRoom(), r);
+                    unlockedAny = true;
+                }
             }
-        }
 
-        if (unlockedAny)
-            printMsg("*CLICK* Uma porta próxima destrancou!");
+            Room treasure = map.getRoom("Tesouro");
+            if (treasure != null && map.isNeighbor(p.getCurrentRoom(), treasure)) {
+                map.openPassage(p.getCurrentRoom(), treasure);
+            }
 
-        // Explicitly unlock treasure if adjacent
-        Room treasure = map.getRoom("Tesouro");
-        if (treasure != null && map.isNeighbor(p.getCurrentRoom(), treasure)) {
-            map.openPassage(p.getCurrentRoom(), treasure);
+            if (!unlockedAny && treasure == null) {
+                System.out.println("(Mas não havia portas trancadas por perto)");
+            }
+        } else {
+            System.out.println("*CLUNK* A alavanca ficou presa! Não funcionou...");
+            System.out.println("Terás de tentar novamente numa próxima jogada.");
+            p.addToLog("Lever failed.");
+            p.setHasInteracted(false);
         }
     }
 
@@ -394,29 +359,26 @@ public class GameEngine {
         int chance = (int) (Math.random() * 100);
 
         if (chance < 10) {
-            printMsg("!!! EVENTO: Um vento misterioso empurra-te para trás! !!!");
+            System.out.println("!!! EVENTO: Uma rajada de vento empurra-te para trás! !!!");
             p.addToLog("Event: Pushed back.");
             if (p.getPreviousRoom() != null) {
-                Room prev = p.getPreviousRoom();
-                movePlayerWithAnimation(p, prev);
-                printMsg("Foste movido de volta para " + prev.getId());
+                movePlayerWithAnimation(p, p.getPreviousRoom());
+                System.out.println("Foste movido de volta para " + p.getPreviousRoom().getId());
             }
         } else if (chance < 20) {
-            printMsg("!!! EVENTO: Caíste numa armadilha! Estás atordoado por 1 turno. !!!");
+            System.out.println("!!! EVENTO: Caíste numa armadilha! Estás stun durante 1 turno. !!!");
             p.addToLog("Event: Stunned by trap.");
             p.setSkipTurns(1);
 
-            // Rastrear armadilha
-            if (achievementTracker != null && !p.isBot()) {
+            if (achievementTracker != null && p.equals(achievementTracker.getTrackedPlayer())) {
                 achievementTracker.recordTrap();
-                achievementTracker.recordStun();
             }
         } else if (chance < 30) {
             if (allPlayers.size() > 1) {
-                printMsg("!!! EVENTO: FEITIO DE TELETRANSPORTE! Escolhe um jogador para trocar posições... !!!");
+                System.out.println(
+                        "!!! EVENTO: PODER DO TELEPORT! Escolhe um jogador para trocar posições... !!!");
                 p.addToLog("Event: Swapped positions.");
 
-                // Build list of other players
                 ArrayUnorderedList<Player> otherPlayers = new ArrayUnorderedList<>();
                 Iterator<Player> it = allPlayers.iterator();
                 while (it.hasNext()) {
@@ -429,19 +391,17 @@ public class GameEngine {
                 Player target = null;
 
                 if (otherPlayers.isEmpty()) {
-                    printMsg("Sem outros jogadores para trocar!");
+                    System.out.println("Sem outros jogadores para trocar!");
                 } else if (p.isBot()) {
-                    // Bot picks first available player
                     target = otherPlayers.first();
                 } else {
-                    // Console mode: show numbered list
-                    printMsg("Seleciona um jogador para trocar:");
+                    System.out.println("Seleciona um jogador para trocar:");
                     Object[] playerArray = new Object[otherPlayers.size()];
                     int idx = 0;
                     for (Player other : otherPlayers) {
                         playerArray[idx] = other;
-                        printMsg((idx + 1) + ". " + other.getName() + " [em " + other.getCurrentRoom().getId()
-                                + "]");
+                        System.out.println((idx + 1) + ". " + other.getName() + " [em " +
+                                other.getCurrentRoom().getId() + "]");
                         idx++;
                     }
 
@@ -450,11 +410,10 @@ public class GameEngine {
                         System.out.print("Tua escolha (1-" + playerArray.length + "): ");
                         try {
                             if (consoleScanner.hasNextLine()) {
-                                String input = consoleScanner.nextLine().trim();
-                                choice = Integer.parseInt(input);
+                                choice = Integer.parseInt(consoleScanner.nextLine().trim());
                             }
                         } catch (NumberFormatException e) {
-                            printMsg("Entrada inválida!");
+                            System.out.println("Entrada inválida!");
                         }
                     }
                     target = (Player) playerArray[choice - 1];
@@ -463,24 +422,53 @@ public class GameEngine {
                 if (target != null) {
                     Room myRoom = p.getCurrentRoom();
                     Room targetRoom = target.getCurrentRoom();
-                    movePlayerWithAnimation(p, targetRoom);
-                    movePlayerWithAnimation(target, myRoom);
-                    printMsg("Posições trocadas com " + target.getName());
+                    p.setCurrentRoomAfterSwap(targetRoom);
+                    target.setCurrentRoomAfterSwap(myRoom);
+                    System.out.println("Posições trocadas com " + target.getName());
                 }
             }
-        } else if (chance < 40) {
-            printMsg("!!! EVENTO: Descarga de Adrenalina! Ganhas um turno extra! !!!");
+        } else if (chance < 35) {
+            if (allPlayers.size() > 2) {
+                System.out.println("!!! EVENTO: CAOS TOTAL! Todos os jogadores trocam de posição! !!!");
+                p.addToLog("Event: All players shuffled.");
+
+                ArrayUnorderedList<Room> currentPositions = new ArrayUnorderedList<>();
+                Iterator<Player> it = allPlayers.iterator();
+                while (it.hasNext()) {
+                    currentPositions.addToRear(it.next().getCurrentRoom());
+                }
+
+                ArrayUnorderedList<Room> shuffledPositions = new ArrayUnorderedList<>();
+                while (!currentPositions.isEmpty()) {
+                    int randomIndex = (int) (Math.random() * currentPositions.size());
+                    Iterator<Room> roomIt = currentPositions.iterator();
+                    Room selectedRoom = null;
+                    for (int i = 0; i <= randomIndex; i++) {
+                        selectedRoom = roomIt.next();
+                    }
+                    shuffledPositions.addToRear(selectedRoom);
+                    currentPositions.remove(selectedRoom);
+                }
+
+                Iterator<Player> playerIt = allPlayers.iterator();
+                Iterator<Room> roomIt = shuffledPositions.iterator();
+                while (playerIt.hasNext() && roomIt.hasNext()) {
+                    Player player = playerIt.next();
+                    Room newRoom = roomIt.next();
+                    player.setCurrentRoomAfterSwap(newRoom);
+                    System.out.println(player.getName() + " foi movido para " + newRoom.getId());
+                }
+            } else {
+                System.out.println("!!! EVENTO: CAOS TOTAL! (Mas são poucos jogadores para trocar) !!!");
+            }
+        } else if (chance < 45) {
+            System.out.println("!!! EVENTO: Adrenalina! Tens um turno extra! !!!");
             p.addToLog("Event: Gained extra turn.");
             if (p.isBot())
                 playBotTurn(p);
             else
                 playHumanTurn(p);
         }
-    }
-
-    public void generateJSONReport() {
-        exportReport();
-        printMsg("Relatório gerado: report.json");
     }
 
     public void exportReport() {

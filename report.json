@@ -1,25 +1,16 @@
 [
   {
-    "name": "teste",
+    "name": "Jogador 1",
     "log": [
-      "Started game at Entrada Sul",
-      "Moved to Entrada Leste"
-    ]
-  },
-  {
-    "name": "teste2",
-    "log": [
-      "Started game at Entrada Sul",
-      "Moved to Entrada Leste",
-      "Event: Gained extra turn.",
+      "Started game at Entrada Oeste",
       "Moved to Tesouro",
       "Found the treasure and won!"
     ]
   },
   {
-    "name": "teste3",
+    "name": "Jogador 2",
     "log": [
-      "Started game at Entrada Oeste"
+      "Started game at Entrada Norte"
     ]
   }
 ]
