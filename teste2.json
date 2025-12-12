@@ -39,79 +39,65 @@
       "room": "Sala 1",
       "type": "NORMAL",
       "interaction": "enigma",
-      "x": 404,
-      "y": 750
+      "x": 400,
+      "y": 234
     },
     {
       "room": "Sala 2",
       "type": "NORMAL",
-      "interaction": "lever",
-      "x": 648,
-      "y": 50
+      "interaction": "none",
+      "x": 815,
+      "y": 519
     },
     {
       "room": "Sala 3",
       "type": "NORMAL",
-      "interaction": "none",
-      "x": 590,
-      "y": 333
+      "interaction": "lever",
+      "x": 583,
+      "y": 209
     },
     {
       "room": "Sala 4",
       "type": "NORMAL",
       "interaction": "none",
-      "x": 759,
-      "y": 380
+      "x": 950,
+      "y": 284
     },
     {
       "room": "Sala 5",
       "type": "NORMAL",
-      "interaction": "lever",
-      "x": 733,
-      "y": 218
+      "interaction": "none",
+      "x": 950,
+      "y": 547
     },
     {
       "room": "Sala 6",
       "type": "NORMAL",
-      "interaction": "enigma",
-      "x": 519,
-      "y": 640
+      "interaction": "lever",
+      "x": 950,
+      "y": 439
     },
     {
       "room": "Sala 7",
       "type": "NORMAL",
-      "interaction": "none",
-      "x": 529,
-      "y": 542
-    },
-    {
-      "room": "Sala 8",
-      "type": "NORMAL",
-      "interaction": "lever",
-      "x": 502,
-      "y": 750
-    },
-    {
-      "room": "Sala 9",
-      "type": "NORMAL",
-      "interaction": "none",
-      "x": 898,
-      "y": 524
+      "interaction": "enigma",
+      "x": 808,
+      "y": 203
     }
   ],
   "connections": [
     {
-      "from": "Entrada Sul",
+      "from": "Tesouro",
       "to": "Sala 1",
       "cost": 1
     },
     {
-      "from": "Entrada Norte",
+      "from": "Entrada Este",
       "to": "Sala 2",
       "cost": 1
     },
     {
-      "from": "Tesouro",
+      "from": "Sala 1",
       "to": "Sala 3",
       "cost": 1
     },
@@ -121,54 +107,49 @@
       "cost": 1
     },
     {
-      "from": "Sala 4",
+      "from": "Entrada Este",
       "to": "Sala 5",
       "cost": 1
     },
     {
-      "from": "Entrada Sul",
+      "from": "Sala 5",
       "to": "Sala 6",
       "cost": 1
     },
     {
-      "from": "Tesouro",
+      "from": "Sala 4",
       "to": "Sala 7",
       "cost": 1
     },
     {
-      "from": "Sala 1",
-      "to": "Sala 8",
-      "cost": 1
-    },
-    {
-      "from": "Entrada Este",
-      "to": "Sala 9",
+      "from": "Entrada Norte",
+      "to": "Entrada Sul",
       "cost": 1
     },
     {
       "from": "Entrada Oeste",
-      "to": "Tesouro",
+      "to": "Sala 2",
       "cost": 1
     },
     {
-      "from": "Sala 4",
-      "to": "Sala 1",
-      "cost": 1
-    },
-    {
-      "from": "Sala 2",
-      "to": "Entrada Este",
+      "from": "Entrada Norte",
+      "to": "Sala 2",
       "cost": 1
     },
     {
       "from": "Sala 1",
-      "to": "Sala 9",
+      "to": "Entrada Oeste",
+      "cost": 1
+    },
+    {
+      "from": "Entrada Oeste",
+      "to": "Sala 2",
       "cost": 1000
     },
     {
-      "from": "Sala 2",
-      "to": "Tesouro",
-      "cost": 1
+      "from": "Sala 1",
+      "to": "Sala 6",
+      "cost": 1000
     }
   ]
 }

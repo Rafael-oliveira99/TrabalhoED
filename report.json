@@ -2,7 +2,12 @@
   {
     "name": "Jogador 1",
     "log": [
-      "Started game at Entrada Oeste",
+      "Started game at Entrada",
+      "Moved to Sala 1",
+      "Event: Pushed back.",
+      "Moved to Entrada",
+      "Moved to Sala 1",
+      "Event: Gained extra turn.",
       "Moved to Tesouro",
       "Found the treasure and won!"
     ]
@@ -10,7 +15,8 @@
   {
     "name": "Jogador 2",
     "log": [
-      "Started game at Entrada Norte"
+      "Started game at Entrada",
+      "Moved to Sala 1"
     ]
   }
 ]

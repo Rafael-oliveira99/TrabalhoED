@@ -62,7 +62,7 @@ public class MapEditor {
         rooms.addToRear(tempRooms[0]);
 
         // 2. Criar entradas
-        String[] directions = { "Norte", "Sul", "Leste", "Oeste", "Nordeste", "Sudeste", "Sudoeste", "Noroeste" };
+        String[] directions = { "Norte", "Sul", "Este", "Oeste", "Nordeste", "Sudeste", "Sudoeste", "Noroeste" };
         int[][] entrancePositions = {
                 { 500, 50 }, { 500, 750 }, { 950, 400 }, { 50, 400 },
                 { 800, 100 }, { 800, 700 }, { 200, 700 }, { 200, 100 }
